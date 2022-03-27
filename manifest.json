@@ -1,0 +1,19 @@
+{
+  "name": "CookieAudit",
+  "description": "Semesterproject",
+  "version": "0.1",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "cookies",
+    "activeTab",
+    "tabs",
+    "storage",
+    "unlimitedStorage",
+    "scripting",
+    "debugger"
+  ],
+  "host_permissions": ["<all_urls>", "*://*/*"]
+}
