@@ -16,7 +16,7 @@
     <link href="/assets/css/all.min.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="intro">
+    <div class="padded">
       <h2><i class="fa-solid fa-cookie-bite"></i> CookieAudit</h2>
       <div id="cmp" class="alert alert-info"></div>
     </div>
@@ -30,6 +30,10 @@
       </thead>
       <tbody id="cookieTableBody"></tbody>
     </table>
+
+    <div class="padded">
+      <button id="delete" class="btn btn-warning btn-delcookies"><i class="fa-solid fa-trash"></i> Delete Cookies</button>
+    </div>
 
     <script src="popup.js"></script>
   </body>

@@ -6,6 +6,10 @@ body {
     min-width: 250px;
 }
 
-.intro {
+.padded {
   padding: 10px;
+}
+
+.btn-delcookies {
+  width: 100%;
 }
