@@ -10,21 +10,7 @@ chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
   let url = new URL(tabs[0].url);
   url = url.hostname.replace(/www/gi, "");
 
-  // get all cookies from that hostname.
-  // %TODO 3rd party cookies can't be detected with this method.
-  // either try to get [https://stackoverflow.com/a/50099635/6553774] to work with V3
-  // or tap into debugging API
-  chrome.cookies.getAll(
-    {
-      domain: url,
-    },
-    function (cookies) {
-      chrome.storage.sync.set({ cookies });
-      showCookieResult();
-    }
-  );
-
-  // run content scipt for DOM access
+  //   // run content scipt for DOM access
   let activeTab = tabs[0].id;
   activeTab.executeScript;
   chrome.scripting.executeScript(
@@ -38,35 +24,8 @@ chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
 });
 
 function deleteCookies() {
-  chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-    if (!Array.isArray(tabs)) {
-      return;
-    }
-    let activeUrl = new URL(tabs[0].url);
-    activeUrl = activeUrl.hostname.replace(/www/gi, "");
-
-    chrome.storage.sync.get("cookies", (cookies) => {
-      for (cookie in cookies.cookies) {
-        var url =
-          "http" +
-          (cookies.cookies[cookie].secure ? "s" : "") +
-          "://" +
-          cookies.cookies[cookie].domain +
-          cookies.cookies[cookie].path;
-        chrome.cookies.remove({ url: url, name: cookies.cookies[cookie].name });
-      }
-    });
-    setTimeout(function() {
-      chrome.cookies.getAll(
-        {
-          domain: activeUrl,
-        },
-        function (cookies) {
-          chrome.storage.sync.set({ cookies });
-          showCookieResult();
-        }
-      );
-    }, 500)
+  chrome.runtime.sendMessage("clear_cookies", function (_) {
+    showCookieResult();
   });
 }
 
@@ -98,29 +57,29 @@ function showCMPResult() {
   chrome.storage.sync.get("detectedCMP", (CMP) => {
     cmpName = Object.values(CMP)[0];
     console.log(cmpName);
-    //let elCMP = document.createElement("p");
     cmpDiv.innerHTML = "<strong>CMP:</strong> " + cmpName;
-    //cmpDiv.appendChild(elCMP);
   });
 }
 
 // list cookies
 function showCookieResult() {
-  chrome.storage.sync.get("cookies", (cookies) => {
-    console.log(cookies.cookies);
+  chrome.runtime.sendMessage("get_cookies", function (cookies) {
     cookieTable.innerHTML = "";
-    for (cookie in cookies.cookies) {
+    for (i in cookies) {
       let elCookie = document.createElement("tr");
       elCookie.innerHTML =
         "<td>" +
-        cookies.cookies[cookie].name +
+        cookies[i].name +
         "</td><td>" +
-        cookies.cookies[cookie].domain +
+        cookies[i].domain +
         "</td>";
       cookieTable.appendChild(elCookie);
     }
   });
 }
+
+// update cookies every 4 seconds
+var intervalID = window.setInterval(showCookieResult, 4000);
 
 // onclick events are not allowed, therefore we have to addEventListener to buttons etc.
 document.addEventListener("DOMContentLoaded", function () {
