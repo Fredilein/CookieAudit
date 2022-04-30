@@ -1,4 +1,5 @@
-// import { extractFeatures } from "./extractor.js";
+import { escapeString, datetimeToExpiry, urlToUniformDomain } from "/modules/globals.js";
+import { extractFeatures } from "/modules/extractor.js";
 
 var historyDB = undefined;
 const openDBRequest = indexedDB.open("CookieDB", 1);
@@ -141,11 +142,9 @@ const getCookiesFromStorage = async function () {
 };
 
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
-  console.log("received new message");
   if (request === "get_cookies") {
-    console.log("getting cookies...");
     getCookiesFromStorage().then((cookies) => {
-      console.log(`sending cookies to frontend: ${cookies}`);
+      console.log(`sending cookies to frontend`);
       sendResponse(cookies);
     });
   } else if (request === "clear_cookies") {
@@ -156,49 +155,6 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
   }
   return true; // Need this to avoid 'message port closed' error
 });
-
-// TODO: Move to external helper file
-/**
- * Remove URL encoding from the string
- * @param  {String} str   Maybe URL encoded string.
- * @return {String}       Decoded String.
- */
-const escapeString = function (str) {
-  if (typeof str != "string") {
-    str = String(str);
-  }
-  return unescape(encodeURIComponent(str));
-};
-
-/**
- * Given a cookie expiration date, compute the expiry time in seconds,
- * starting from the current time and date.
- * @param  {Object} cookie  Cookie object that contains the attributes "session" and "expirationDate".
- * @return {Number}         Expiration time in seconds. Zero if session cookie.
- */
-const datetimeToExpiry = function (cookie) {
-  let curTS = Math.floor(Date.now() / 1000);
-  return cookie.session ? 0 : cookie.expirationDate - curTS;
-};
-
-/**
- * Takes a URL or a domain string and transforms it into a uniform format.
- * Examples: {"www.example.com", "https://example.com/", ".example.com"} --> "example.com"
- * @param {String} domain  Domain to clean and bring into uniform format
- * @return {String}        Cleaned domain string.
- */
-const urlToUniformDomain = function (url) {
-  if (url === null) {
-    return null;
-  }
-  let new_url = url.trim();
-  new_url = new_url.replace(/^\./, ""); // cookies can start like .www.example.com
-  new_url = new_url.replace(/^http(s)?:\/\//, "");
-  new_url = new_url.replace(/^www([0-9])?/, "");
-  new_url = new_url.replace(/^\./, "");
-  new_url = new_url.replace(/\/.*$/, "");
-  return new_url;
-};
 
 /**
  * Using the cookie input, extract features from the cookie and classify it, retrieving a label.
@@ -216,7 +172,7 @@ const classifyCookie = async function (_, feature_input) {
   //     throw new Error(`Predicted label exceeded valid range: ${label}`);
   // }
 
-  return features;
+  return 1;
 };
 
 const handleCookie = function (cookie) {
@@ -227,11 +183,9 @@ const handleCookie = function (cookie) {
 
 chrome.cookies.onChanged.addListener((changeInfo) => {
   if (!changeInfo.removed) {
+    console.log("new cookie");
     insertCookieIntoStorage(changeInfo.cookie);
-    // handleCookie(changeInfo.cookie);
+    handleCookie(changeInfo.cookie);
   }
-  // getCookiesFromStorage().then((cookies) => {
-  //   console.log(cookies);
-  // });
 });
 
