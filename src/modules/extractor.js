@@ -71,60 +71,60 @@ const patternFullMonthsEng = new RegExp(
  * @param {String} flag            Key for the flag to check between updates
  * @return                         True if differs between at least 1 update.
  */
-// const checkFlagChanged = function (cookieUpdates, flag) {
-//   for (let i = 0; i < cookieUpdates.length - 1; i++) {
-//     if (cookieUpdates[i][flag] != cookieUpdates[i + 1][flag]) return true;
-//   }
-//   return false;
-// };
+const checkFlagChanged = function (cookieUpdates, flag) {
+  for (let i = 0; i < cookieUpdates.length - 1; i++) {
+    if (cookieUpdates[i][flag] != cookieUpdates[i + 1][flag]) return true;
+  }
+  return false;
+};
 
 /**
  * Compute the mean and standard deviation of the given entries.
  * @param {Array} entries   Array of numbers.
  * @return {Object}         Object storing mean and stddev.
  */
-// const computeMeanAndStdev = function (entries) {
-//   if (entries.length == 0) {
-//     return { mean: null, stdev: null };
-//   } else if (entries.length == 1) {
-//     return { mean: entries[0], stdev: null };
-//   } else {
-//     let mean = entries.reduce((cursum, v) => cursum + v, 0) / entries.length;
-//     let stdev = Math.sqrt(
-//       entries.reduce((cursum, v) => cursum + Math.pow(v - mean, 2), 0) /
-//         (entries.length - 1)
-//     );
-//     return { mean: mean, stdev: stdev };
-//   }
-// };
+const computeMeanAndStdev = function (entries) {
+  if (entries.length == 0) {
+    return { mean: null, stdev: null };
+  } else if (entries.length == 1) {
+    return { mean: entries[0], stdev: null };
+  } else {
+    let mean = entries.reduce((cursum, v) => cursum + v, 0) / entries.length;
+    let stdev = Math.sqrt(
+      entries.reduce((cursum, v) => cursum + Math.pow(v - mean, 2), 0) /
+        (entries.length - 1)
+    );
+    return { mean: mean, stdev: stdev };
+  }
+};
 
 /**
  * Compute the Shannon Entropy for the given string,
  * @param {String} cookieValue  Cookie value string
  * @return {Number}             Shannon entropy.
  */
-// const computeEntropy = function (cookieValue) {
-//   let stringSize = cookieValue.length;
+const computeEntropy = function (cookieValue) {
+  let stringSize = cookieValue.length;
 
-//   let occurrences = {};
-//   for (let i = 0; i < stringSize; i++) {
-//     let curr_char = cookieValue.charAt(i);
-//     let count = occurrences[curr_char];
-//     if (count === undefined) {
-//       occurrences[curr_char] = 1;
-//     } else {
-//       occurrences[curr_char] += 1;
-//     }
-//   }
+  let occurrences = {};
+  for (let i = 0; i < stringSize; i++) {
+    let curr_char = cookieValue.charAt(i);
+    let count = occurrences[curr_char];
+    if (count === undefined) {
+      occurrences[curr_char] = 1;
+    } else {
+      occurrences[curr_char] += 1;
+    }
+  }
 
-//   let entropy = 0;
-//   for (let char_count of Object.values(occurrences)) {
-//     let ratio = char_count / stringSize;
-//     entropy -= ratio * Math.log2(ratio);
-//   }
+  let entropy = 0;
+  for (let char_count of Object.values(occurrences)) {
+    let ratio = char_count / stringSize;
+    entropy -= ratio * Math.log2(ratio);
+  }
 
-//   return entropy;
-// };
+  return entropy;
+};
 
 /**
  * Determine the best separator out of a string of possible separators.
@@ -133,25 +133,25 @@ const patternFullMonthsEng = new RegExp(
  * @param {String} validDelimiters  String of valid delimiters.
  * @param {Number} minSep           Minimum number of separators.
  */
-// const chooseBestSeparator = function (cookieContent, validSeparators, minSep) {
-//   let maxoccs = minSep;
-//   let bestIndex = -1;
-//   let chosenSeparator = null;
-//   for (let i = 0; i < validSeparators.length; i++) {
-//     let r = validSeparators[i];
-//     // need to escape the following
-//     if (r === "." || r === "|") {
-//       r = "\\" + r;
-//     }
-//     let numoccs = (cookieContent.match(RegExp(r, "g")) || []).length;
-//     if (numoccs > maxoccs) {
-//       chosenSeparator = validSeparators[i];
-//       bestIndex = i;
-//       maxoccs = numoccs;
-//     }
-//   }
-//   return { sep: chosenSeparator, count: maxoccs, index: bestIndex };
-// };
+const chooseBestSeparator = function (cookieContent, validSeparators, minSep) {
+  let maxoccs = minSep;
+  let bestIndex = -1;
+  let chosenSeparator = null;
+  for (let i = 0; i < validSeparators.length; i++) {
+    let r = validSeparators[i];
+    // need to escape the following
+    if (r === "." || r === "|") {
+      r = "\\" + r;
+    }
+    let numoccs = (cookieContent.match(RegExp(r, "g")) || []).length;
+    if (numoccs > maxoccs) {
+      chosenSeparator = validSeparators[i];
+      bestIndex = i;
+      maxoccs = numoccs;
+    }
+  }
+  return { sep: chosenSeparator, count: maxoccs, index: bestIndex };
+};
 
 /**
  * Try to remove URL encoding from the given input string.
@@ -159,32 +159,32 @@ const patternFullMonthsEng = new RegExp(
  * @param  {String} str   Input string to maybe decode.
  * @return {String}       Possibly decoded string.
  */
-// const maybeRemoveURLEncoding = function (str) {
-//   let decodedValue = undefined;
-//   try {
-//     decodedValue = decodeURIComponent(str);
-//   } catch (error) {
-//     decodedValue = str;
-//   }
-//   return decodedValue;
-// };
+const maybeRemoveURLEncoding = function (str) {
+  let decodedValue = undefined;
+  try {
+    decodedValue = decodeURIComponent(str);
+  } catch (error) {
+    decodedValue = str;
+  }
+  return decodedValue;
+};
 
 /**
  * Check if the given cookie content contains a date string
  * @param {String} cookieContent   Cookie content with URL encoding removed
  * @return {Boolean}               True if the content contains a date string.
  */
-// const maybeDateContent = function (cookieContent) {
-//   return (
-//     patternYearMonthDay.test(cookieContent) ||
-//     patternDayMonthYear.test(cookieContent) ||
-//     patternMonthDayYear.test(cookieContent) ||
-//     ((patternAlpha3DaysEng.test(cookieContent) ||
-//       patternFullDaysEng.test(cookieContent)) &&
-//       (patternAlpha3MonthsEng.test(cookieContent) ||
-//         patternFullMonthsEng.test(cookieContent)))
-//   );
-// };
+const maybeDateContent = function (cookieContent) {
+  return (
+    patternYearMonthDay.test(cookieContent) ||
+    patternDayMonthYear.test(cookieContent) ||
+    patternMonthDayYear.test(cookieContent) ||
+    ((patternAlpha3DaysEng.test(cookieContent) ||
+      patternFullDaysEng.test(cookieContent)) &&
+      (patternAlpha3MonthsEng.test(cookieContent) ||
+        patternFullMonthsEng.test(cookieContent)))
+  );
+};
 
 // Object that stores all the feature setup functions. These initialize the objects for the above variables.
 // Which functions are executed on startup is determined by the feature config.
@@ -300,7 +300,7 @@ const setupFeatureResourcesCallback = function (fconfig) {
   };
 
   maybeRunSetup(feature_config["per_cookie_features"]);
-//   maybeRunSetup(feature_config["per_update_features"]);
+  maybeRunSetup(feature_config["per_update_features"]);
 //   maybeRunSetup(feature_config["per_diff_features"]);
 };
 
@@ -319,74 +319,74 @@ const perCookieFeatures = {
       sparse[curr_idx + rank] = 1.0;
     }
   },
-//   feature_top_domains: (sparse, curr_idx, cookie_data, args) => {
-//     let transf_domain = urlToUniformDomain(cookie_data["domain"]);
-//     if (transf_domain in top_domains) {
-//       let rank = top_domains[transf_domain];
-//       sparse[curr_idx + rank] = 1.0;
-//     }
-//   },
-//   feature_pattern_names: (sparse, curr_idx, cookie_data, args) => {
-//     for (let i = 0; i < pattern_names.length; i++) {
-//       if (pattern_names[i].test(cookie_data["name"])) {
-//         sparse[curr_idx + i] = 1.0;
-//       }
-//     }
-//   },
-//   feature_name_tokens: (sparse, curr_idx, cookie_data, args) => {
-//     for (let i = 0; i < name_tokens.length; i++) {
-//       if (name_tokens[i].test(cookie_data["name"])) {
-//         sparse[curr_idx + i] = 1.0;
-//       }
-//     }
-//   },
-//   feature_iab_vendor: (sparse, curr_idx, cookie_data, args) => {
-//     let transf_domain = urlToUniformDomain(cookie_data["domain"]);
-//     if (iabeurope_vendors.has(transf_domain)) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_domain_period: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["domain"].startsWith(".")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_is_third_party: (sparse, curr_idx, cookie_data, args) => {
-//     throw new Error("Not Supported");
-//   },
-//   feature_non_root_path: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["path"].normalize() !== "/") {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_update_count: (sparse, curr_idx, cookie_data, args) => {
-//     sparse[curr_idx] = cookie_data["variable_data"].length;
-//   },
-//   feature_http_only_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "http_only")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_host_only_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "host_only")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_secure_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "secure")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_same_site_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "same_site")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_is_session_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "session")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
+  feature_top_domains: (sparse, curr_idx, cookie_data, args) => {
+    let transf_domain = urlToUniformDomain(cookie_data["domain"]);
+    if (transf_domain in top_domains) {
+      let rank = top_domains[transf_domain];
+      sparse[curr_idx + rank] = 1.0;
+    }
+  },
+  feature_pattern_names: (sparse, curr_idx, cookie_data, args) => {
+    for (let i = 0; i < pattern_names.length; i++) {
+      if (pattern_names[i].test(cookie_data["name"])) {
+        sparse[curr_idx + i] = 1.0;
+      }
+    }
+  },
+  feature_name_tokens: (sparse, curr_idx, cookie_data, args) => {
+    for (let i = 0; i < name_tokens.length; i++) {
+      if (name_tokens[i].test(cookie_data["name"])) {
+        sparse[curr_idx + i] = 1.0;
+      }
+    }
+  },
+  feature_iab_vendor: (sparse, curr_idx, cookie_data, args) => {
+    let transf_domain = urlToUniformDomain(cookie_data["domain"]);
+    if (iabeurope_vendors.has(transf_domain)) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_domain_period: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["domain"].startsWith(".")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_is_third_party: (sparse, curr_idx, cookie_data, args) => {
+    throw new Error("Not Supported");
+  },
+  feature_non_root_path: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["path"].normalize() !== "/") {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_update_count: (sparse, curr_idx, cookie_data, args) => {
+    sparse[curr_idx] = cookie_data["variable_data"].length;
+  },
+  feature_http_only_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "http_only")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_host_only_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "host_only")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_secure_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "secure")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_same_site_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "same_site")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_is_session_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "session")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
 //   feature_gestalt_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
 //     let values = [];
 //     let cookieUpdates = cookie_data["variable_data"];
@@ -427,25 +427,25 @@ const perCookieFeatures = {
 //       sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
 //     }
 //   },
-//   feature_content_length_mean_and_stddev: (
-//     sparse,
-//     curr_idx,
-//     cookie_data,
-//     args
-//   ) => {
-//     let contentLengths = [];
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length; i++) {
-//       let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
-//       contentLengths.push(decodedValue.length);
-//     }
+  feature_content_length_mean_and_stddev: (
+    sparse,
+    curr_idx,
+    cookie_data,
+    args
+  ) => {
+    let contentLengths = [];
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length; i++) {
+      let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
+      contentLengths.push(decodedValue.length);
+    }
 
-//     let result = computeMeanAndStdev(contentLengths);
-//     if (contentLengths.length > 0) {
-//       sparse[curr_idx] = result["mean"];
-//       sparse[curr_idx + 1] = contentLengths.length > 1 ? result["stdev"] : 0.0;
-//     }
-//   },
+    let result = computeMeanAndStdev(contentLengths);
+    if (contentLengths.length > 0) {
+      sparse[curr_idx] = result["mean"];
+      sparse[curr_idx + 1] = contentLengths.length > 1 ? result["stdev"] : 0.0;
+    }
+  },
 //   feature_compressed_length_mean_and_stddev: (
 //     sparse,
 //     curr_idx,
@@ -466,144 +466,144 @@ const perCookieFeatures = {
 //       sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
 //     }
 //   },
-//   feature_entropy_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
-//     let entropies = [];
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length; i++) {
-//       let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
-//       entropies.push(computeEntropy(decodedValue));
-//     }
+  feature_entropy_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
+    let entropies = [];
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length; i++) {
+      let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
+      entropies.push(computeEntropy(decodedValue));
+    }
 
-//     let result = computeMeanAndStdev(entropies);
-//     if (entropies.length > 0) {
-//       sparse[curr_idx] = result["mean"];
-//       sparse[curr_idx + 1] = entropies.length > 1 ? result["stdev"] : 0.0;
-//     }
-//   },
-//   feature_expiry_changed: (sparse, curr_idx, cookie_data, args) => {
-//     // 1 day of time difference
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length - 1; i++) {
-//       let abs_diff = Math.abs(
-//         cookieUpdates[i]["expiry"] - cookieUpdates[i + 1]["expiry"]
-//       );
-//       if (abs_diff >= 3600 * 24) {
-//         sparse[curr_idx] = 1.0;
-//         break;
-//       }
-//     }
-//   },
-//   feature_http_only_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["variable_data"][0]["http_only"]) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_host_only_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["variable_data"][0]["host_only"]) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_secure_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["variable_data"][0]["secure"]) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_session_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     if (cookie_data["variable_data"][0]["session"]) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
-//   feature_same_site_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     let sflag = cookie_data["variable_data"][0]["same_site"];
-//     if (sflag === "no_restriction") {
-//       sparse[curr_idx] = 1.0;
-//     } else if (sflag === "lax" || sflag === "unspecified") {
-//       sparse[curr_idx + 1] = 1.0;
-//     } else if (sflag === "strict") {
-//       sparse[curr_idx + 2] = 1.0;
-//     } else {
-//       console.warn("Unrecognized same_site value! Value: " + sflag);
-//     }
-//   },
-//   feature_expiry_first_update: (sparse, curr_idx, cookie_data, args) => {
-//     sparse[curr_idx] = cookie_data["variable_data"][0]["expiry"];
-//   },
-//   feature_content_changed: (sparse, curr_idx, cookie_data, args) => {
-//     if (checkFlagChanged(cookie_data["variable_data"], "value")) {
-//       sparse[curr_idx] = 1.0;
-//     }
-//   },
+    let result = computeMeanAndStdev(entropies);
+    if (entropies.length > 0) {
+      sparse[curr_idx] = result["mean"];
+      sparse[curr_idx + 1] = entropies.length > 1 ? result["stdev"] : 0.0;
+    }
+  },
+  feature_expiry_changed: (sparse, curr_idx, cookie_data, args) => {
+    // 1 day of time difference
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length - 1; i++) {
+      let abs_diff = Math.abs(
+        cookieUpdates[i]["expiry"] - cookieUpdates[i + 1]["expiry"]
+      );
+      if (abs_diff >= 3600 * 24) {
+        sparse[curr_idx] = 1.0;
+        break;
+      }
+    }
+  },
+  feature_http_only_first_update: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["variable_data"][0]["http_only"]) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_host_only_first_update: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["variable_data"][0]["host_only"]) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_secure_first_update: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["variable_data"][0]["secure"]) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_session_first_update: (sparse, curr_idx, cookie_data, args) => {
+    if (cookie_data["variable_data"][0]["session"]) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
+  feature_same_site_first_update: (sparse, curr_idx, cookie_data, args) => {
+    let sflag = cookie_data["variable_data"][0]["same_site"];
+    if (sflag === "no_restriction") {
+      sparse[curr_idx] = 1.0;
+    } else if (sflag === "lax" || sflag === "unspecified") {
+      sparse[curr_idx + 1] = 1.0;
+    } else if (sflag === "strict") {
+      sparse[curr_idx + 2] = 1.0;
+    } else {
+      console.warn("Unrecognized same_site value! Value: " + sflag);
+    }
+  },
+  feature_expiry_first_update: (sparse, curr_idx, cookie_data, args) => {
+    sparse[curr_idx] = cookie_data["variable_data"][0]["expiry"];
+  },
+  feature_content_changed: (sparse, curr_idx, cookie_data, args) => {
+    if (checkFlagChanged(cookie_data["variable_data"], "value")) {
+      sparse[curr_idx] = 1.0;
+    }
+  },
 };
 
 // Features extracted for each update in a cookie
 // Data is only missing if update doesn't exist.
-// const perUpdateFeatures = {
-//   feature_http_only: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["http_only"] ? 1.0 : -1.0;
-//   },
-//   feature_host_only: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["host_only"] ? 1.0 : -1.0;
-//   },
-//   feature_secure: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["secure"] ? 1.0 : -1.0;
-//   },
-//   feature_session: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["session"] ? 1.0 : -1.0;
-//   },
-//   feature_same_site: (sparse, curr_idx, var_data, args) => {
-//     let sflag = var_data["same_site"];
-//     let eone = -1.0;
-//     let etwo = -1.0;
-//     let ethree = -1.0;
-//     if (sflag === "no_restriction") {
-//       eone = 1.0;
-//     } else if (sflag === "lax" || sflag === "unspecified") {
-//       etwo = 1.0;
-//     } else if (sflag === "strict") {
-//       ethree = 1.0;
-//     } else {
-//       console.warn("Unrecognized same_site value! Value: " + sflag);
-//     }
-//     sparse[curr_idx] = eone;
-//     sparse[curr_idx + 1] = etwo;
-//     sparse[curr_idx + 2] = ethree;
-//   },
-//   feature_expiry: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["expiry"];
-//   },
-//   feature_expiry_extra: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = var_data["expiry"] < 3600 ? 1.0 : -1.0;
-//     sparse[curr_idx + 1] =
-//       3600 <= var_data["expiry"] && var_data["expiry"] < 3600 * 12 ? 1.0 : -1.0;
-//     sparse[curr_idx + 2] =
-//       3600 * 12 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24
-//         ? 1.0
-//         : -1.0;
-//     sparse[curr_idx + 3] =
-//       3600 * 24 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24 * 7
-//         ? 1.0
-//         : -1.0;
-//     sparse[curr_idx + 4] =
-//       3600 * 24 * 7 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24 * 30
-//         ? 1.0
-//         : -1.0;
-//     sparse[curr_idx + 5] =
-//       3600 * 24 * 30 <= var_data["expiry"] &&
-//       var_data["expiry"] < 3600 * 24 * 30 * 6
-//         ? 1.0
-//         : -1.0;
-//     sparse[curr_idx + 6] =
-//       3600 * 24 * 30 * 6 <= var_data["expiry"] &&
-//       var_data["expiry"] < 3600 * 24 * 30 * 18
-//         ? 1.0
-//         : -1.0;
-//     sparse[curr_idx + 7] =
-//       3600 * 24 * 30 * 18 <= var_data["expiry"] ? 1.0 : -1.0;
-//   },
-//   feature_content_length: (sparse, curr_idx, var_data, args) => {
-//     let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = decodedValue.length;
-//   },
+const perUpdateFeatures = {
+  feature_http_only: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["http_only"] ? 1.0 : -1.0;
+  },
+  feature_host_only: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["host_only"] ? 1.0 : -1.0;
+  },
+  feature_secure: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["secure"] ? 1.0 : -1.0;
+  },
+  feature_session: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["session"] ? 1.0 : -1.0;
+  },
+  feature_same_site: (sparse, curr_idx, var_data, args) => {
+    let sflag = var_data["same_site"];
+    let eone = -1.0;
+    let etwo = -1.0;
+    let ethree = -1.0;
+    if (sflag === "no_restriction") {
+      eone = 1.0;
+    } else if (sflag === "lax" || sflag === "unspecified") {
+      etwo = 1.0;
+    } else if (sflag === "strict") {
+      ethree = 1.0;
+    } else {
+      console.warn("Unrecognized same_site value! Value: " + sflag);
+    }
+    sparse[curr_idx] = eone;
+    sparse[curr_idx + 1] = etwo;
+    sparse[curr_idx + 2] = ethree;
+  },
+  feature_expiry: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["expiry"];
+  },
+  feature_expiry_extra: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = var_data["expiry"] < 3600 ? 1.0 : -1.0;
+    sparse[curr_idx + 1] =
+      3600 <= var_data["expiry"] && var_data["expiry"] < 3600 * 12 ? 1.0 : -1.0;
+    sparse[curr_idx + 2] =
+      3600 * 12 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24
+        ? 1.0
+        : -1.0;
+    sparse[curr_idx + 3] =
+      3600 * 24 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24 * 7
+        ? 1.0
+        : -1.0;
+    sparse[curr_idx + 4] =
+      3600 * 24 * 7 <= var_data["expiry"] && var_data["expiry"] < 3600 * 24 * 30
+        ? 1.0
+        : -1.0;
+    sparse[curr_idx + 5] =
+      3600 * 24 * 30 <= var_data["expiry"] &&
+      var_data["expiry"] < 3600 * 24 * 30 * 6
+        ? 1.0
+        : -1.0;
+    sparse[curr_idx + 6] =
+      3600 * 24 * 30 * 6 <= var_data["expiry"] &&
+      var_data["expiry"] < 3600 * 24 * 30 * 18
+        ? 1.0
+        : -1.0;
+    sparse[curr_idx + 7] =
+      3600 * 24 * 30 * 18 <= var_data["expiry"] ? 1.0 : -1.0;
+  },
+  feature_content_length: (sparse, curr_idx, var_data, args) => {
+    let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = decodedValue.length;
+  },
 //   feature_compressed_content: (sparse, curr_idx, var_data, args) => {
 //     let compressed = LZString.compress(var_data["value"]);
 //     let compSize = compressed.length;
@@ -612,250 +612,250 @@ const perCookieFeatures = {
 //     let reduction = var_data["value"].length - compSize;
 //     sparse[curr_idx + 1] = reduction;
 //   },
-//   feature_shannon_entropy: (sparse, curr_idx, var_data, args) => {
-//     let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = computeEntropy(decodedValue);
-//   },
-//   feature_url_encoding: (sparse, curr_idx, var_data, args) => {
-//     let cookie_content = var_data["value"];
-//     let decoded_content = maybeRemoveURLEncoding(cookie_content);
-//     sparse[curr_idx] = cookie_content !== decoded_content ? 1.0 : -1.0;
-//   },
-//   feature_delimiter_separated: (sparse, curr_idx, var_data, args) => {
-//     let vector_length = separators.length;
+  feature_shannon_entropy: (sparse, curr_idx, var_data, args) => {
+    let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = computeEntropy(decodedValue);
+  },
+  feature_url_encoding: (sparse, curr_idx, var_data, args) => {
+    let cookie_content = var_data["value"];
+    let decoded_content = maybeRemoveURLEncoding(cookie_content);
+    sparse[curr_idx] = cookie_content !== decoded_content ? 1.0 : -1.0;
+  },
+  feature_delimiter_separated: (sparse, curr_idx, var_data, args) => {
+    let vector_length = separators.length;
 
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     let result = chooseBestSeparator(
-//       cookieContent,
-//       separators,
-//       args["min_seps"]
-//     );
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    let result = chooseBestSeparator(
+      cookieContent,
+      separators,
+      args["min_seps"]
+    );
 
-//     for (let i = 0; i < vector_length; i++) {
-//       sparse[curr_idx + i] = -1;
-//     }
+    for (let i = 0; i < vector_length; i++) {
+      sparse[curr_idx + i] = -1;
+    }
 
-//     if (result["sep"] !== null) {
-//       sparse[curr_idx + result["index"]] = result["count"] + 1;
-//     }
-//   },
-//   feature_base64_encoded: (sparse, curr_idx, var_data, args) => {
-//     let decoded = undefined;
-//     try {
-//       decoded = atob(var_data["value"]);
-//       sparse[curr_idx] = 1.0;
-//     } catch (error) {
-//       sparse[curr_idx] = -1.0;
-//     }
-//   },
-//   feature_contains_javascript_object: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    if (result["sep"] !== null) {
+      sparse[curr_idx + result["index"]] = result["count"] + 1;
+    }
+  },
+  feature_base64_encoded: (sparse, curr_idx, var_data, args) => {
+    let decoded = undefined;
+    try {
+      decoded = atob(var_data["value"]);
+      sparse[curr_idx] = 1.0;
+    } catch (error) {
+      sparse[curr_idx] = -1.0;
+    }
+  },
+  feature_contains_javascript_object: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
 
-//     try {
-//       JSON.parse(cookieContent);
-//       sparse[curr_idx] = 1.0;
-//     } catch (error) {
-//       try {
-//         let decoded = atob(var_data["value"]);
-//         JSON.parse(decoded);
-//         sparse[curr_idx] = 1.0;
-//       } catch (serror) {
-//         sparse[curr_idx] = -1.0;
-//       }
-//     }
-//   },
-//   feature_english_terms_in_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    try {
+      JSON.parse(cookieContent);
+      sparse[curr_idx] = 1.0;
+    } catch (error) {
+      try {
+        let decoded = atob(var_data["value"]);
+        JSON.parse(decoded);
+        sparse[curr_idx] = 1.0;
+      } catch (serror) {
+        sparse[curr_idx] = -1.0;
+      }
+    }
+  },
+  feature_english_terms_in_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
 
-//     for (let i = 0; i < content_terms.length; i++) {
-//       sparse[curr_idx + i] = content_terms[i].test(cookieContent) ? 1.0 : -1.0;
-//     }
-//   },
-//   feature_csv_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     let result = chooseBestSeparator(
-//       cookieContent,
-//       separators,
-//       args["min_seps"]
-//     );
+    for (let i = 0; i < content_terms.length; i++) {
+      sparse[curr_idx + i] = content_terms[i].test(cookieContent) ? 1.0 : -1.0;
+    }
+  },
+  feature_csv_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    let result = chooseBestSeparator(
+      cookieContent,
+      separators,
+      args["min_seps"]
+    );
 
-//     let containsBool = false;
-//     let containsNum = false;
-//     let containsAlpha = false;
-//     let containsAlnum = false;
-//     let containsHex = false;
+    let containsBool = false;
+    let containsNum = false;
+    let containsAlpha = false;
+    let containsAlnum = false;
+    let containsHex = false;
 
-//     if (result["sep"]) {
-//       let csv_split = cookieContent.split(result["sep"]);
-//       for (let entry of csv_split) {
-//         containsNum |= numRegex.test(entry);
-//         containsHex |= hexRegex.test(entry);
-//         containsAlpha |= alphaRegex.test(entry);
-//         containsAlnum |= alnumRegex.test(entry);
-//         containsBool |= truthValueRegex.test(entry);
-//       }
-//     }
-//     sparse[curr_idx] = containsNum ? 1.0 : -1.0;
-//     sparse[curr_idx + 1] = containsHex ? 1.0 : -1.0;
-//     sparse[curr_idx + 2] = containsAlpha ? 1.0 : -1.0;
-//     sparse[curr_idx + 3] = containsAlnum ? 1.0 : -1.0;
-//     sparse[curr_idx + 4] = containsBool ? 1.0 : -1.0;
-//   },
-//   feature_js_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    if (result["sep"]) {
+      let csv_split = cookieContent.split(result["sep"]);
+      for (let entry of csv_split) {
+        containsNum |= numRegex.test(entry);
+        containsHex |= hexRegex.test(entry);
+        containsAlpha |= alphaRegex.test(entry);
+        containsAlnum |= alnumRegex.test(entry);
+        containsBool |= truthValueRegex.test(entry);
+      }
+    }
+    sparse[curr_idx] = containsNum ? 1.0 : -1.0;
+    sparse[curr_idx + 1] = containsHex ? 1.0 : -1.0;
+    sparse[curr_idx + 2] = containsAlpha ? 1.0 : -1.0;
+    sparse[curr_idx + 3] = containsAlnum ? 1.0 : -1.0;
+    sparse[curr_idx + 4] = containsBool ? 1.0 : -1.0;
+  },
+  feature_js_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
 
-//     let jsobj = undefined;
-//     try {
-//       jsobj = JSON.parse(cookieContent);
-//     } catch (error) {
-//       try {
-//         let decoded = atob(var_data["value"]);
-//         jsobj = JSON.parse(decoded);
-//       } catch (serror) {}
-//     }
+    let jsobj = undefined;
+    try {
+      jsobj = JSON.parse(cookieContent);
+    } catch (error) {
+      try {
+        let decoded = atob(var_data["value"]);
+        jsobj = JSON.parse(decoded);
+      } catch (serror) {}
+    }
 
-//     let foundIdentifier = false;
-//     let containsBool = false;
-//     let containsNum = false;
-//     let containsString = false;
-//     let containsAlpha = false;
-//     let containsAlnum = false;
-//     let containsSubobject = false;
-//     let containsList = false;
-//     let containsNull = false;
-//     let containsHex = false;
+    let foundIdentifier = false;
+    let containsBool = false;
+    let containsNum = false;
+    let containsString = false;
+    let containsAlpha = false;
+    let containsAlnum = false;
+    let containsSubobject = false;
+    let containsList = false;
+    let containsNull = false;
+    let containsHex = false;
 
-//     let checkContent = function (value) {
-//       if (typeof value === "object") {
-//         if (Array.isArray(value)) {
-//           containsList = true;
-//         } else if (value !== null) {
-//           containsSubobject = true;
-//         } else {
-//           containsNull = true;
-//         }
-//       } else if (typeof value === "string") {
-//         containsString = true;
+    let checkContent = function (value) {
+      if (typeof value === "object") {
+        if (Array.isArray(value)) {
+          containsList = true;
+        } else if (value !== null) {
+          containsSubobject = true;
+        } else {
+          containsNull = true;
+        }
+      } else if (typeof value === "string") {
+        containsString = true;
 
-//         let entry = value;
-//         containsNum |= numRegex.test(entry);
-//         containsHex |= hexRegex.test(entry);
-//         containsAlpha |= alphaRegex.test(entry);
-//         containsAlnum |= alnumRegex.test(entry);
-//         containsBool |= truthValueRegex.test(entry);
-//       } else if (typeof value === "number") {
-//         containsNum = true;
-//       } else if (typeof value === "boolean") {
-//         containsBool = true;
-//       } else {
-//         console.warn("Unexpected object type : " + typeof value);
-//       }
-//     };
+        let entry = value;
+        containsNum |= numRegex.test(entry);
+        containsHex |= hexRegex.test(entry);
+        containsAlpha |= alphaRegex.test(entry);
+        containsAlnum |= alnumRegex.test(entry);
+        containsBool |= truthValueRegex.test(entry);
+      } else if (typeof value === "number") {
+        containsNum = true;
+      } else if (typeof value === "boolean") {
+        containsBool = true;
+      } else {
+        console.warn("Unexpected object type : " + typeof value);
+      }
+    };
 
-//     if (typeof jsobj === "object" && jsobj !== null) {
-//       if (Array.isArray(jsobj)) {
-//         for (let v of jsobj) {
-//           checkContent(v);
-//         }
-//       } else {
-//         for (let key of Object.keys(jsobj)) {
-//           if (idRegex.test(key)) {
-//             foundIdentifier = true;
-//           }
-//           checkContent(jsobj[key]);
-//         }
-//       }
-//     } else if (
-//       jsobj !== undefined &&
-//       typeof jsobj != "number" &&
-//       typeof jsobj != "string" &&
-//       typeof jsobj != "boolean" &&
-//       jsobj !== null
-//     ) {
-//       console.warn("Unexpected type: " + typeof jsobj);
-//     }
+    if (typeof jsobj === "object" && jsobj !== null) {
+      if (Array.isArray(jsobj)) {
+        for (let v of jsobj) {
+          checkContent(v);
+        }
+      } else {
+        for (let key of Object.keys(jsobj)) {
+          if (idRegex.test(key)) {
+            foundIdentifier = true;
+          }
+          checkContent(jsobj[key]);
+        }
+      }
+    } else if (
+      jsobj !== undefined &&
+      typeof jsobj != "number" &&
+      typeof jsobj != "string" &&
+      typeof jsobj != "boolean" &&
+      jsobj !== null
+    ) {
+      console.warn("Unexpected type: " + typeof jsobj);
+    }
 
-//     sparse[curr_idx] =
-//       jsobj && typeof jsobj === "object" ? Object.keys(jsobj).length : -1.0;
-//     sparse[curr_idx + 1] = foundIdentifier ? 1.0 : -1.0;
-//     sparse[curr_idx + 2] = containsBool ? 1.0 : -1.0;
-//     sparse[curr_idx + 3] = containsNum ? 1.0 : -1.0;
-//     sparse[curr_idx + 4] = containsString ? 1.0 : -1.0;
-//     sparse[curr_idx + 5] = containsAlpha ? 1.0 : -1.0;
-//     sparse[curr_idx + 6] = containsAlnum ? 1.0 : -1.0;
-//     sparse[curr_idx + 7] = containsSubobject ? 1.0 : -1.0;
-//     sparse[curr_idx + 8] = containsList ? 1.0 : -1.0;
-//     sparse[curr_idx + 9] = containsNull ? 1.0 : -1.0;
-//     sparse[curr_idx + 10] = containsHex ? 1.0 : -1.0;
-//   },
-//   feature_numerical_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = numRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_hex_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = hexRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_alpha_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = alphaRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_is_identifier: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = codeIdentRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_all_uppercase_content: (sparse, curr_idx, var_data, args) => {
-//     let cont = maybeRemoveURLEncoding(var_data["value"]);
-//     // must contain at least one alphabetical character
-//     sparse[curr_idx] =
-//       alphaAnyRegex.test(cont) && cont === cont.toUpperCase() ? 1.0 : -1.0;
-//   },
-//   feature_all_lowercase_content: (sparse, curr_idx, var_data, args) => {
-//     let cont = maybeRemoveURLEncoding(var_data["value"]);
-//     // must contain at least one alphabetical character
-//     sparse[curr_idx] =
-//       alphaAnyRegex.test(cont) && cont === cont.toLowerCase() ? 1.0 : -1.0;
-//   },
-//   feature_empty_content: (sparse, curr_idx, var_data, args) => {
-//     sparse[curr_idx] = !var_data["value"] ? 1.0 : -1.0;
-//   },
-//   feature_boolean_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = truthValueRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_timestamp_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = unixTimestampRegex.test(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_date_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] = maybeDateContent(cookieContent) ? 1.0 : -1.0;
-//   },
-//   feature_canonical_uuid: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     let versionOneHot = [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0];
+    sparse[curr_idx] =
+      jsobj && typeof jsobj === "object" ? Object.keys(jsobj).length : -1.0;
+    sparse[curr_idx + 1] = foundIdentifier ? 1.0 : -1.0;
+    sparse[curr_idx + 2] = containsBool ? 1.0 : -1.0;
+    sparse[curr_idx + 3] = containsNum ? 1.0 : -1.0;
+    sparse[curr_idx + 4] = containsString ? 1.0 : -1.0;
+    sparse[curr_idx + 5] = containsAlpha ? 1.0 : -1.0;
+    sparse[curr_idx + 6] = containsAlnum ? 1.0 : -1.0;
+    sparse[curr_idx + 7] = containsSubobject ? 1.0 : -1.0;
+    sparse[curr_idx + 8] = containsList ? 1.0 : -1.0;
+    sparse[curr_idx + 9] = containsNull ? 1.0 : -1.0;
+    sparse[curr_idx + 10] = containsHex ? 1.0 : -1.0;
+  },
+  feature_numerical_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = numRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_hex_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = hexRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_alpha_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = alphaRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_is_identifier: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = codeIdentRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_all_uppercase_content: (sparse, curr_idx, var_data, args) => {
+    let cont = maybeRemoveURLEncoding(var_data["value"]);
+    // must contain at least one alphabetical character
+    sparse[curr_idx] =
+      alphaAnyRegex.test(cont) && cont === cont.toUpperCase() ? 1.0 : -1.0;
+  },
+  feature_all_lowercase_content: (sparse, curr_idx, var_data, args) => {
+    let cont = maybeRemoveURLEncoding(var_data["value"]);
+    // must contain at least one alphabetical character
+    sparse[curr_idx] =
+      alphaAnyRegex.test(cont) && cont === cont.toLowerCase() ? 1.0 : -1.0;
+  },
+  feature_empty_content: (sparse, curr_idx, var_data, args) => {
+    sparse[curr_idx] = !var_data["value"] ? 1.0 : -1.0;
+  },
+  feature_boolean_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = truthValueRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_timestamp_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = unixTimestampRegex.test(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_date_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] = maybeDateContent(cookieContent) ? 1.0 : -1.0;
+  },
+  feature_canonical_uuid: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    let versionOneHot = [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0];
 
-//     let matchObj = cookieContent.match(uuidRegex);
-//     if (matchObj) {
-//       let versionChar = Number.parseInt(matchObj[1]);
-//       if (versionChar > 0 && versionChar < 6) {
-//         versionOneHot[versionChar - 1] = 1.0;
-//       } else {
-//         versionOneHot[5] = 1.0;
-//       }
-//     }
-//     for (let i = 0; i < versionOneHot.length; i++) {
-//       sparse[curr_idx + i] = versionOneHot[i];
-//     }
-//   },
-//   feature_url_content: (sparse, curr_idx, var_data, args) => {
-//     let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
-//     sparse[curr_idx] =
-//       httpRegex.test(cookieContent) || wwwRegex.test(cookieContent)
-//         ? 1.0
-//         : -1.0;
-//   },
-// };
+    let matchObj = cookieContent.match(uuidRegex);
+    if (matchObj) {
+      let versionChar = Number.parseInt(matchObj[1]);
+      if (versionChar > 0 && versionChar < 6) {
+        versionOneHot[versionChar - 1] = 1.0;
+      } else {
+        versionOneHot[5] = 1.0;
+      }
+    }
+    for (let i = 0; i < versionOneHot.length; i++) {
+      sparse[curr_idx + i] = versionOneHot[i];
+    }
+  },
+  feature_url_content: (sparse, curr_idx, var_data, args) => {
+    let cookieContent = maybeRemoveURLEncoding(var_data["value"]);
+    sparse[curr_idx] =
+      httpRegex.test(cookieContent) || wwwRegex.test(cookieContent)
+        ? 1.0
+        : -1.0;
+  },
+};
 
 // Features extracted for difference between updates
 // const perDiffFeatures = {
@@ -905,10 +905,7 @@ const extractFeatures = function (cookieDat) {
   // feature extraction for per-cookie features
   let i = 0;
   for (i in feature_config["per_cookie_features"]) {
-    console.log("i: ", i);
-    console.log("Feature config: ", feature_config["per_cookie_features"][i]);
     if (feature_config["per_cookie_features"][i]["enabled"]) {
-      console.log("running feature extraction");
       cfunc = perCookieFeatures[feature_config["per_cookie_features"][i]["function"]];
       cfunc(sparseFeatures, curr_idx, cookieDat, feature_config["per_cookie_features"][i]["args"]);
       curr_idx += feature_config["per_cookie_features"][i]["vector_size"];

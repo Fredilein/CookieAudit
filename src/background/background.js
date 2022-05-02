@@ -1,5 +1,6 @@
 import { escapeString, datetimeToExpiry, urlToUniformDomain } from "/modules/globals.js";
 import { extractFeatures } from "/modules/extractor.js";
+import { predictClass } from "/modules/predictor.js";
 
 var historyDB = undefined;
 const openDBRequest = indexedDB.open("CookieDB", 1);
@@ -166,7 +167,8 @@ const classifyCookie = async function (_, feature_input) {
   console.log("starting feature extraction");
   let features = extractFeatures(feature_input);
   console.log("features:\n", features);
-  // label = await predictClass(features, cblk_pscale);
+  let label = await predictClass(features, 3); // 3 from cblk_pscale default
+  console.log("predicted Label: ", label);
 
   // if (label < 0 && label > 3) {
   //     throw new Error(`Predicted label exceeded valid range: ${label}`);

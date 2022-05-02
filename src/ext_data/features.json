@@ -19,7 +19,7 @@
       "function": "feature_top_domains",
       "setup" : "setup_top_domains",
       "source": "ext_data/resources/top_domains.txt",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 500,
       "args": {}
     },
@@ -29,7 +29,7 @@
       "function": "feature_pattern_names",
       "setup": "setup_pattern_names",
       "source": "ext_data/resources/cookie_name_patterns.txt",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 50,
       "args": {}
     },
@@ -39,7 +39,7 @@
       "function": "feature_name_tokens",
       "setup": "setup_name_features",
       "source": "ext_data/resources/name_features_filtered.txt",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 500,
       "args": {}
     },
@@ -49,7 +49,7 @@
       "function": "feature_iab_vendor",
       "setup": "setup_iabeurope_vendors",
       "source": "ext_data/resources/iabeurope_vendors.txt",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -57,7 +57,7 @@
       "name": "domain_period",
       "desc": "Indicates that a cookie is valid for all subdomains.",
       "function": "feature_domain_period",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -65,7 +65,7 @@
       "name": "host_only",
       "desc": "Binary indicator feature. Set to 1 if the cookie has the host-only flag set. This flag cannot changed with updates.",
       "function": "feature_host_only_first_update",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -81,7 +81,7 @@
       "name": "non_root_path",
       "desc": "Binary feature. Set to 1 if the cookie's path differs from the default '/' value.",
       "function": "feature_non_root_path",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -97,7 +97,7 @@
       "name": "http_only_changed",
       "desc": "Binary feature. Set to 1 if the http_only flag changed between any of the stored updates for this cookie.",
       "function": "feature_http_only_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -105,7 +105,7 @@
       "name": "secure_changed",
       "desc": "Binary feature. Set to 1 if the 'secure' flag changed between any two updates for this cookie.",
       "function": "feature_secure_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -113,7 +113,7 @@
       "name": "same_site_changed",
       "desc": "Binary feature. Set to 1 if the 'same_site' flag changed between any two updates for this cookie.",
       "function": "feature_same_site_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -121,7 +121,7 @@
       "name": "session_changed",
       "desc": "Binary feature. Set to 1 if the 'session' flag changed between any two updates for this cookie. (extremely unlikely)",
       "function": "feature_is_session_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -129,14 +129,14 @@
       "name": "content_changed",
       "desc": "Binary feature. Set to 1 if the content of the cookie changed between any two updates.",
       "function": "feature_content_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },    {
       "name": "expiry_changed",
       "desc": "Binary indicator. Set to 1 if the expiration date changed significantly (> 24 hours) between any two consecutive updates.",
       "function": "feature_expiry_changed",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -160,7 +160,7 @@
       "name": "contlength_total",
       "desc": "Mean and Standard Deviation of the content length over all updates.",
       "function": "feature_content_length_mean_and_stddev",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 2,
       "args": {}
     },
@@ -176,7 +176,7 @@
       "name": "entropy_total",
       "desc": "Mean and Standard deviation of the Shannon Entropy over all updates.",
       "function": "feature_entropy_mean_and_stddev",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 2,
       "args": {}
     }
@@ -187,7 +187,7 @@
       "name": "http_only",
       "desc": "Binary Feature. Set to 1 if the http_only flag is set for the update.",
       "function": "feature_http_only",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -195,7 +195,7 @@
       "name": "secure",
       "desc": "Binary Feature. Set to 1 if the secure flag is set for the update.",
       "function": "feature_secure",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -203,7 +203,7 @@
       "name": "session",
       "desc": "Binary Feature. Set to 1 if the session flag is set for the update.",
       "function": "feature_session",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -211,7 +211,7 @@
       "name": "same_site",
       "desc": "One-hot vector. same_site flag may contain the categorical values 'none', 'lax' or 'strict'.",
       "function": "feature_same_site",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 3,
       "args": {}
     },
@@ -219,7 +219,7 @@
       "name": "expiry",
       "desc": "Ordinal Feature. Expiration time in seconds.",
       "function": "feature_expiry",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -227,7 +227,7 @@
       "name": "expiry_extra",
       "desc": "Binary Vector. Additional checks whether the cookie expires in less than 1 hour, between 1 and 12 hours, between 12 to 24 hours, \n between 1 to 7 days, between 1 week to 1 month, between 1 and 6 months, between 6 and 18 months, and more than 18 months.",
       "function": "feature_expiry_extra",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 8,
       "args": {}
     },
@@ -235,7 +235,7 @@
       "name": "content_length",
       "desc": "Ordinal Feature. Length of the value field of the cookie update.",
       "function": "feature_content_length",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -251,7 +251,7 @@
       "name": "shannon_entropy",
       "desc": "Ordinal Feature. Shannon entropy result for the value field of the update.",
       "function": "feature_shannon_entropy",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -259,7 +259,7 @@
       "name": "url_encoding",
       "desc": "Binary Feature. Whether the value of the cookie update has been URL encoded.",
       "function": "feature_url_encoding",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -267,7 +267,7 @@
       "name": "delimiter_sep",
       "desc": "Ordinal Feature. Number of CSV separated columns. Uses a predefined set of delimiters. A minimum number of separations is needed for this feature to be extracted. Finally, once a delimiter is chosen, counts the number of columns.",
       "function": "feature_delimiter_separated",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 9,
       "args": {
         "min_seps": 1
@@ -277,7 +277,7 @@
       "name": "base64_encoded",
       "desc": "Try to decode the cookie content as base64 into a UTF-16 string.",
       "function": "feature_base64_encoded",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -285,7 +285,7 @@
       "name": "contains_js_obj",
       "desc": "Binary Feature. Set to 1 if the cookie update contains a javascript or JSON object.",
       "function": "feature_contains_javascript_object",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -295,7 +295,7 @@
       "function": "feature_english_terms_in_content",
       "setup": "setup_content_terms",
       "source": "ext_data/resources/content_terms_filtered.txt",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 500,
       "args": {}
     },
@@ -303,7 +303,7 @@
       "name": "csv_contents",
       "desc": "Binary Vector. Check if the cookie content is CSV separated, and if so, check if the columns contain numerical, hexadecimal, alphabetical or alphanumerical entries.",
       "function": "feature_csv_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 5,
       "args": {
         "min_seps": 2
@@ -313,7 +313,7 @@
       "name": "js_contents",
       "desc": "Binary Vector. Check if the cookie content is a json/javascript object, and check if the elements contain a range of different types of content. \n Includes: Alphabetical, Alphanumerical, hexadecimal, numerical content, 'id' strings, empty content, boolean subobject and lists. Note: does not recursively check subobjects and lists yet.",
       "function": "feature_js_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 11,
       "args": {}
     },
@@ -321,7 +321,7 @@
       "name": "numerical_content",
       "desc": "Binary Feature. Set to 1 if the cookie content is a decimal number.",
       "function": "feature_numerical_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -329,7 +329,7 @@
       "name": "hex_content",
       "desc": "Binary Feature. Set to 1 if the cookie content is a hexadecimal number.",
       "function": "feature_hex_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -337,7 +337,7 @@
       "name": "alpha_content",
       "desc": "Binary Feature. Set to 1 if the cookie content is entirely alphabetical.",
       "function": "feature_alpha_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -345,7 +345,7 @@
       "name": "is_identifier",
       "desc": "Binary Feature. Set to 1 if the cookie content is a valid code identifier (no special characters).",
       "function": "feature_is_identifier",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -353,7 +353,7 @@
       "name": "all_uppercase",
       "desc": "Binary Feature. Set to 1 if all alphabetical characters in the cookie content are uppercase.",
       "function": "feature_all_uppercase_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -361,7 +361,7 @@
       "name": "all_lowercase",
       "desc": "Binary Feature. Set to 1 if all alphabetical characters in the cookie content are lowercase.",
       "function": "feature_all_lowercase_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -369,15 +369,15 @@
       "name": "empty_content",
       "desc": "Binary Feature. Set to 1 if the cookie content is empty or whitespace.",
       "function": "feature_empty_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
     {
       "name": "boolean_content",
-      "desc": "Binary Feature. Set to 1 if the cookie content is contained in a set of common boolean identifiers. (include 1, 0, true, false, yes, no etc.)",
+      "desc": "Binary Feature. Set to 1 if the cookie content is contained in a set of common boolean identifiers. (include 1, 0, true, true, yes, no etc.)",
       "function": "feature_boolean_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -385,7 +385,7 @@
       "name": "timestamp_content",
       "desc": "Binary Feature. Set to 1 if the cookie contains a Unix timestamp (second or millisecond) anywhere inside the string.",
       "function": "feature_timestamp_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -393,7 +393,7 @@
       "name": "date_content",
       "desc": "Binary Feature. Set to 1 if the cookie contains a combination of either date formats, or english month and day strings.",
       "function": "feature_date_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -401,7 +401,7 @@
       "name": "contains_uuid",
       "desc": "One-hot vector. Check if the cookie contains a UUID of the format {8}-{4}-{4}-{4}-{12} (hex strings), and if so, detects which UUID variant it is.",
       "function": "feature_canonical_uuid",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 6,
       "args": {}
     },
@@ -409,7 +409,7 @@
       "name": "url_content",
       "desc": "Binary Feature. Set to 1 if the cookie contains a URL anywhere in its value field.",
       "function": "feature_url_content",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     }

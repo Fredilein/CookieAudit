@@ -96,29 +96,6 @@ const getStorageValue = async function (stType, key) {
  * @param {String} dtype        Type of the data. Examples: "json", "text", "binary"
  * @param {Function} callback   Callback function that will be executed as soon as the data is available, receives data as first argument.
  */
-// const getExtensionFile = function(url, dtype, callback, errorCallback = null) {
-//     const req = new XMLHttpRequest();
-
-//     req.responseType = dtype;
-//     req.onreadystatechange = function(event)
-//     {
-//         if (this.readyState === XMLHttpRequest.DONE)
-//         {
-//             if (this.status === 200) {
-//                 callback(this.response);
-//             }
-//             else {
-//                 console.error("Error -- could not retrieve data at (%s): %d (%s)", url, this.status, this.statusText);
-//                 if (errorCallback){
-//                     errorCallback(this.status);
-//                 }
-//             }
-//         }
-//     };
-
-//     req.open('GET', url, true);
-//     req.send(null);
-// };
 export const getExtensionFile = async function (url, dtype, callback, errorCallback = null) {
   let res = await fetch(url)
   if (dtype == "text") {
