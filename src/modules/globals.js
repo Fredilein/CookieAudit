@@ -179,7 +179,7 @@ export const datetimeToExpiry = function (cookie) {
  * @param {Number} idx class label index
  * @returns {String} human-readable string
  */
-const classIndexToString = (idx) => {
+export const classIndexToString = (idx) => {
   switch (idx) {
     case -1:
       return "Unknown";

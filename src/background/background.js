@@ -1,4 +1,4 @@
-import { escapeString, datetimeToExpiry, urlToUniformDomain } from "/modules/globals.js";
+import { escapeString, datetimeToExpiry, urlToUniformDomain, classIndexToString } from "/modules/globals.js";
 import { extractFeatures } from "/modules/extractor.js";
 import { predictClass } from "/modules/predictor.js";
 
@@ -145,7 +145,7 @@ const getCookiesFromStorage = async function () {
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
   if (request === "get_cookies") {
     getCookiesFromStorage().then((cookies) => {
-      console.log(`sending cookies to frontend`);
+      // console.log(`sending cookies to frontend`);
       sendResponse(cookies);
     });
   } else if (request === "clear_cookies") {
@@ -164,11 +164,9 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
  */
 const classifyCookie = async function (_, feature_input) {
   // Feature extraction timing
-  console.log("starting feature extraction");
   let features = extractFeatures(feature_input);
-  console.log("features:\n", features);
   let label = await predictClass(features, 3); // 3 from cblk_pscale default
-  console.log("predicted Label: ", label);
+  console.log("Label: ", label, "(", classIndexToString(label), ")");
 
   // if (label < 0 && label > 3) {
   //     throw new Error(`Predicted label exceeded valid range: ${label}`);
@@ -179,13 +177,12 @@ const classifyCookie = async function (_, feature_input) {
 
 const handleCookie = function (cookie) {
   const serializedCookie = createFEInput(cookie);
+  console.log("Cookie: ", cookie.name);
   const label = classifyCookie(cookie, serializedCookie);
-  console.log("Label: ", label);
 };
 
 chrome.cookies.onChanged.addListener((changeInfo) => {
   if (!changeInfo.removed) {
-    console.log("new cookie");
     insertCookieIntoStorage(changeInfo.cookie);
     handleCookie(changeInfo.cookie);
   }

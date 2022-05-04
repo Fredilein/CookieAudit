@@ -955,8 +955,6 @@ const extractFeatures = function (cookieDat) {
   //   }
   // }
   
-  console.log("Feature 0: ", sparseFeatures[0]);
-
   return sparseFeatures;
 };
 
