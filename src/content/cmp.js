@@ -63,11 +63,27 @@ const analyzeCMP = function (selector) {
 const findCookieClasses = function (popup) {
   const checkboxes = popup.querySelectorAll("input[type=checkbox]");
   console.log("[#] Checkboxes:");
+  console.log(checkboxes);
   for (const c of checkboxes) {
-    const text = Array.from(c.parentElement.children).find(el => el.textContent);
-    if (text) console.log(text.textContent);
+    // if (text) console.log(text.textContent);
+    const maybelabel = findTextInElement(c, 5);
+    if (maybelabel) {
+      console.log(findTextInElement(c, 5));
+    } else {
+      console.log("[#] Found no label");
+    }
   }
 };
+
+const findTextInElement = function (element, iter) {
+  if (iter == 0) return;
+  const text = Array.from(element.parentElement.children).find(el => el.textContent);
+  if (!text) {
+    return findTextInElement(element.parentElement, iter - 1)
+  } else {
+    return text.textContent;
+  }
+}
 
 
 const getZIndex = function (e) {
