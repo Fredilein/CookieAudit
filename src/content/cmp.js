@@ -3,6 +3,10 @@ const generalUrl =
 
 var easylist = [".t-consentPrompt"]; // For testing because not in easylist
 
+// TODO: Possiby rename functions
+// Currently fetchEasylist is called and everything happens from there on
+// Thats not good practice...
+
 /*
  * Load easylist from github
  */
