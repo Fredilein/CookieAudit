@@ -1,106 +1,81 @@
-(function(root, factory){
-  if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
-    define(function(){
-      return factory(root);
-    });
-  } else if (typeof module == 'object' && module && module.exports) {
-    module.exports = factory(root);
-  } else {
-    root.Levenshtein = factory(root);
-  }
-}(this, function(root){
+/*
+ * https://github.com/mjylha/Levenshtein-js/blob/master/levenshtein.js
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-  function forEach( array, fn ) { var i, length
-    i = -1
-    length = array.length
-    while ( ++i < length )
-      fn( array[ i ], i, array )
-  }
+// var Levenshtein = Levenshtein || {};
 
-  function map( array, fn ) { var result
-    result = Array( array.length )
-    forEach( array, function ( val, i, array ) {
-      result[i] = fn( val, i, array )
-    })
-    return result
-  }
+export const Levenshtein = function(s, t) {
 
-  function reduce( array, fn, accumulator ) {
-    forEach( array, function( val, i, array ) {
-      accumulator = fn( val, i, array )
-    })
-    return accumulator
-  }
+      if (s === null || t === null || (typeof s !== "string") || (typeof t !== "string") ) {
+          throw "Strings must be defined";
+      }
 
-  // Levenshtein distance
-  function Levenshtein( str_m, str_n ) { var previous, current, matrix
-    // Constructor
-    matrix = this._matrix = []
+      var n = s.length; // length of s
+      var m = t.length; // length of t
 
-    // Sanity checks
-    if ( str_m == str_n )
-      return this.distance = 0
-    else if ( str_m == '' )
-      return this.distance = str_n.length
-    else if ( str_n == '' )
-      return this.distance = str_m.length
-    else {
-      // Danger Will Robinson
-      previous = [ 0 ]
-      forEach( str_m, function( v, i ) { i++, previous[ i ] = i } )
+      if (n == 0) {
+          return m;
+      } else if (m == 0) {
+          return n;
+      }
 
-      matrix[0] = previous
-      forEach( str_n, function( n_val, n_idx ) {
-        current = [ ++n_idx ]
-        forEach( str_m, function( m_val, m_idx ) {
-          m_idx++
-          if ( str_m.charAt( m_idx - 1 ) == str_n.charAt( n_idx - 1 ) )
-            current[ m_idx ] = previous[ m_idx - 1 ]
-          else
-            current[ m_idx ] = Math.min
-              ( previous[ m_idx ]     + 1   // Deletion
-              , current[  m_idx - 1 ] + 1   // Insertion
-              , previous[ m_idx - 1 ] + 1   // Subtraction
-              )
-        })
-        previous = current
-        matrix[ matrix.length ] = previous
-      })
+      if (n > m) {
+          // swap the input strings to consume less memory
+          var tmp = s;
+          s = t;
+          t = tmp;
+          n = m;
+          m = t.length;
+      }
 
-      return this.distance = current[ current.length - 1 ]
-    }
-  }
+      var p = new Array(n+1); //'previous' cost array, horizontally
+      var d = new Array(n+1); // cost array, horizontally
+      var _d; //placeholder to assist in swapping p and d
 
-  Levenshtein.prototype.toString = Levenshtein.prototype.inspect = function inspect ( no_print ) { var matrix, max, buff, sep, rows
-    matrix = this.getMatrix()
-    max = reduce( matrix,function( m, o ) {
-      return Math.max( m, reduce( o, Math.max, 0 ) )
-    }, 0 )
-    buff = Array( ( max + '' ).length ).join( ' ' )
+      // indexes into strings s and t
+      var i; // iterates through s
+      var j; // iterates through t
 
-    sep = []
-    while ( sep.length < (matrix[0] && matrix[0].length || 0) )
-      sep[ sep.length ] = Array( buff.length + 1 ).join( '-' )
-    sep = sep.join( '-+' ) + '-'
+      var t_j; // jth character of t
 
-    rows = map( matrix, function( row ) { var cells
-      cells = map( row, function( cell ) {
-        return ( buff + cell ).slice( - buff.length )
-      })
-      return cells.join( ' |' ) + ' '
-    })
+      var cost; // cost
 
-    return rows.join( "\n" + sep + "\n" )
-  }
+      for (i = 0; i<=n; i++) {
+          p[i] = i;
+      }
 
-  Levenshtein.prototype.getMatrix = function () {
-    return this._matrix.slice()
-  }
+      for (j = 1; j<=m; j++) {
+          t_j = t.charAt(j-1);
+          d[0] = j;
 
-  Levenshtein.prototype.valueOf = function() {
-    return this.distance
-  }
+          for (i=1; i<=n; i++) {
+              cost = s.charAt(i-1)==t_j ? 0 : 1;
+              // minimum of cell to the left+1, to the top+1, diagonally left and up +cost
+              d[i] = Math.min(Math.min(d[i-1]+1, p[i]+1),  p[i-1]+cost);
+          }
 
-  return Levenshtein
+          // copy current distance counts to 'previous row' distance counts
+          _d = p;
+          p = d;
+          d = _d;
+      }
 
-}));
+      // our last action in the above loop was to switch d and p, so p now 
+      // actually has the most recent cost counts
+      return p[n];
+};

@@ -1,7 +1,7 @@
 import { getExtensionFile, urlToUniformDomain } from "./globals.js";
-// import { difflib } from "./third_party/difflib.js";
-// import { Levenshtein } from "./third_party/levenshtein.js";
-// import { LZString } from "./third_party/lz-string.js";
+import { difflib } from "./third_party/difflib.js";
+import { Levenshtein } from "./third_party/levenshtein.js";
+import { LZString } from "./third_party/lz-string.js";
 
 // Loaded in from a JSON file, stores the configuration on which features to extract from a cookie
 // var feature_config = require("../ext_data/features.json");
@@ -387,46 +387,47 @@ const perCookieFeatures = {
       sparse[curr_idx] = 1.0;
     }
   },
-//   feature_gestalt_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
-//     let values = [];
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length - 1; i++) {
-//       let s = new difflib.SequenceMatcher(
-//         null,
-//         cookieUpdates[i]["value"],
-//         cookieUpdates[i + 1]["value"]
-//       );
-//       values.push(s.ratio());
-//     }
+  // Disabled
+  feature_gestalt_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
+    let values = [];
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length - 1; i++) {
+      let s = new difflib.SequenceMatcher(
+        null,
+        cookieUpdates[i]["value"],
+        cookieUpdates[i + 1]["value"]
+      );
+      values.push(s.ratio());
+    }
 
-//     let result = computeMeanAndStdev(values);
-//     if (values.length > 0) {
-//       sparse[curr_idx] = result["mean"];
-//       sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
-//     }
-//   },
-//   feature_levenshtein_mean_and_stddev: (
-//     sparse,
-//     curr_idx,
-//     cookie_data,
-//     args
-//   ) => {
-//     let values = [];
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length - 1; i++) {
-//       let dist = Levenshtein(
-//         cookieUpdates[i]["value"],
-//         cookieUpdates[i + 1]["value"]
-//       );
-//       values.push(dist);
-//     }
+    let result = computeMeanAndStdev(values);
+    if (values.length > 0) {
+      sparse[curr_idx] = result["mean"];
+      sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
+    }
+  },
+  feature_levenshtein_mean_and_stddev: (
+    sparse,
+    curr_idx,
+    cookie_data,
+    args
+  ) => {
+    let values = [];
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length - 1; i++) {
+      let dist = Levenshtein(
+        cookieUpdates[i]["value"],
+        cookieUpdates[i + 1]["value"]
+      );
+      values.push(dist);
+    }
 
-//     let result = computeMeanAndStdev(values);
-//     if (values.length > 0) {
-//       sparse[curr_idx] = result["mean"];
-//       sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
-//     }
-//   },
+    let result = computeMeanAndStdev(values);
+    if (values.length > 0) {
+      sparse[curr_idx] = result["mean"];
+      sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
+    }
+  },
   feature_content_length_mean_and_stddev: (
     sparse,
     curr_idx,
@@ -446,26 +447,27 @@ const perCookieFeatures = {
       sparse[curr_idx + 1] = contentLengths.length > 1 ? result["stdev"] : 0.0;
     }
   },
-//   feature_compressed_length_mean_and_stddev: (
-//     sparse,
-//     curr_idx,
-//     cookie_data,
-//     args
-//   ) => {
-//     let values = [];
-//     let cookieUpdates = cookie_data["variable_data"];
-//     for (let i = 0; i < cookieUpdates.length; i++) {
-//       let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
-//       let compressed = LZString.compressToUTF16(decodedValue);
-//       values.push(compressed.length);
-//     }
+  // Disable:
+  feature_compressed_length_mean_and_stddev: (
+    sparse,
+    curr_idx,
+    cookie_data,
+    args
+  ) => {
+    let values = [];
+    let cookieUpdates = cookie_data["variable_data"];
+    for (let i = 0; i < cookieUpdates.length; i++) {
+      let decodedValue = maybeRemoveURLEncoding(cookieUpdates[i]["value"]);
+      let compressed = LZString.compressToUTF16(decodedValue);
+      values.push(compressed.length);
+    }
 
-//     let result = computeMeanAndStdev(values);
-//     if (values.length > 0) {
-//       sparse[curr_idx] = result["mean"];
-//       sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
-//     }
-//   },
+    let result = computeMeanAndStdev(values);
+    if (values.length > 0) {
+      sparse[curr_idx] = result["mean"];
+      sparse[curr_idx + 1] = values.length > 1 ? result["stdev"] : 0.0;
+    }
+  },
   feature_entropy_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
     let entropies = [];
     let cookieUpdates = cookie_data["variable_data"];
@@ -604,14 +606,14 @@ const perUpdateFeatures = {
     let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
     sparse[curr_idx] = decodedValue.length;
   },
-//   feature_compressed_content: (sparse, curr_idx, var_data, args) => {
-//     let compressed = LZString.compress(var_data["value"]);
-//     let compSize = compressed.length;
+  feature_compressed_content: (sparse, curr_idx, var_data, args) => {
+    let compressed = LZString.compress(var_data["value"]);
+    let compSize = compressed.length;
 
-//     sparse[curr_idx] = compSize;
-//     let reduction = var_data["value"].length - compSize;
-//     sparse[curr_idx + 1] = reduction;
-//   },
+    sparse[curr_idx] = compSize;
+    let reduction = var_data["value"].length - compSize;
+    sparse[curr_idx + 1] = reduction;
+  },
   feature_shannon_entropy: (sparse, curr_idx, var_data, args) => {
     let decodedValue = maybeRemoveURLEncoding(var_data["value"]);
     sparse[curr_idx] = computeEntropy(decodedValue);
@@ -858,29 +860,29 @@ const perUpdateFeatures = {
 };
 
 // Features extracted for difference between updates
-// const perDiffFeatures = {
-//   feature_time_diff: (sparse, curr_idx, prev_data, curr_data, args) => {
-//     sparse[curr_idx] = curr_data["expiry"] - prev_data["expiry"];
-//   },
-//   feature_gestalt_pattern_ratio: (
-//     sparse,
-//     curr_idx,
-//     prev_data,
-//     curr_data,
-//     args
-//   ) => {
-//     let s = new difflib.SequenceMatcher(
-//       null,
-//       prev_data["value"],
-//       curr_data["value"]
-//     );
-//     sparse[curr_idx] = s.ratio();
-//   },
-//   feature_levenshtein_dist: (sparse, curr_idx, prev_data, curr_data, args) => {
-//     let dist = Levenshtein(prev_data["value"], curr_data["value"]);
-//     sparse[curr_idx] = dist;
-//   },
-// };
+const perDiffFeatures = {
+  feature_time_diff: (sparse, curr_idx, prev_data, curr_data, args) => {
+    sparse[curr_idx] = curr_data["expiry"] - prev_data["expiry"];
+  },
+  feature_gestalt_pattern_ratio: (
+    sparse,
+    curr_idx,
+    prev_data,
+    curr_data,
+    args
+  ) => {
+    let s = new difflib.SequenceMatcher(
+      null,
+      prev_data["value"],
+      curr_data["value"]
+    );
+    sparse[curr_idx] = s.ratio();
+  },
+  feature_levenshtein_dist: (sparse, curr_idx, prev_data, curr_data, args) => {
+    let dist = Levenshtein(prev_data["value"], curr_data["value"]);
+    sparse[curr_idx] = dist;
+  },
+};
 
 /**
  * Given an object of cookie data, extract a sparse vector of features.
@@ -893,14 +895,14 @@ const extractFeatures = function (cookieDat) {
   let curr_idx = 0;
   let cfunc = undefined;
   let var_data = cookieDat["variable_data"];
-  // let max_updates = Math.min(
-  //   feature_config["num_updates"],
-  //   cookieDat["variable_data"].length
-  // );
-  // let max_diffs = Math.min(
-  //   feature_config["num_diffs"],
-  //   cookieDat["variable_data"].length - 1
-  // );
+  let max_updates = Math.min(
+    feature_config["num_updates"],
+    cookieDat["variable_data"].length
+  );
+  let max_diffs = Math.min(
+    feature_config["num_diffs"],
+    cookieDat["variable_data"].length - 1
+  );
 
   // feature extraction for per-cookie features
   let i = 0;
@@ -913,47 +915,47 @@ const extractFeatures = function (cookieDat) {
   }
 
   // feature extraction for per-update features
-  // for (const entry of feature_config["per_update_features"]) {
-  //   if (entry["enabled"]) {
-  //     let temp_idx = curr_idx;
-  //     for (let i = 0; i < max_updates; i++) {
-  //       cfunc = perUpdateFeatures[entry["function"]];
-  //       cfunc(sparseFeatures, temp_idx, var_data[i], entry["args"]);
+  for (const entry of feature_config["per_update_features"]) {
+    if (entry["enabled"]) {
+      let temp_idx = curr_idx;
+      for (let i = 0; i < max_updates; i++) {
+        cfunc = perUpdateFeatures[entry["function"]];
+        cfunc(sparseFeatures, temp_idx, var_data[i], entry["args"]);
 
-  //       // remove -1 entries with only one update (distinction between negative entry and missing entry not needed)
-  //       for (let j = temp_idx; j < temp_idx + entry["vector_size"]; j++) {
-  //         if (max_updates === 1 && sparseFeatures[j] === -1) {
-  //           delete sparseFeatures[j];
-  //         }
-  //       }
-  //       temp_idx += entry["vector_size"];
-  //     }
-  //     // update it as such to make the size of the vector consistent
-  //     curr_idx += entry["vector_size"] * feature_config["num_updates"];
-  //   }
-  // }
+        // remove -1 entries with only one update (distinction between negative entry and missing entry not needed)
+        for (let j = temp_idx; j < temp_idx + entry["vector_size"]; j++) {
+          if (max_updates === 1 && sparseFeatures[j] === -1) {
+            delete sparseFeatures[j];
+          }
+        }
+        temp_idx += entry["vector_size"];
+      }
+      // update it as such to make the size of the vector consistent
+      curr_idx += entry["vector_size"] * feature_config["num_updates"];
+    }
+  }
 
   // feature extraction for per-diff features
-  // for (const entry of feature_config["per_diff_features"]) {
-  //   if (entry["enabled"]) {
-  //     let temp_idx = curr_idx;
+  for (const entry of feature_config["per_diff_features"]) {
+    if (entry["enabled"]) {
+      let temp_idx = curr_idx;
 
-  //     for (let i = 0; i < max_diffs; i++) {
-  //       cfunc = perDiffFeatures[entry["function"]];
-  //       cfunc(
-  //         sparseFeatures,
-  //         temp_idx,
-  //         var_data[i],
-  //         var_data[i + 1],
-  //         entry["args"]
-  //       );
-  //       temp_idx += entry["vector_size"];
-  //     }
+      for (let i = 0; i < max_diffs; i++) {
+        cfunc = perDiffFeatures[entry["function"]];
+        cfunc(
+          sparseFeatures,
+          temp_idx,
+          var_data[i],
+          var_data[i + 1],
+          entry["args"]
+        );
+        temp_idx += entry["vector_size"];
+      }
 
-  //     // update it as such to make the size of the vector consistent
-  //     curr_idx += entry["vector_size"] * feature_config["num_diffs"];
-  //   }
-  // }
+      // update it as such to make the size of the vector consistent
+      curr_idx += entry["vector_size"] * feature_config["num_diffs"];
+    }
+  }
   
   return sparseFeatures;
 };

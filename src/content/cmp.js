@@ -50,12 +50,12 @@ const analyzeCMP = function (selector) {
   buttons.forEach((btn) => {
     console.log(btn.innerHTML);
     // TODO: Craft a list here:
-    if (btn.innerHTML.toLowerCase().includes("preferences") || btn.innerHTML.toLowerCase().includes("settings")) {
+    if (btn.innerHTML.toLowerCase().includes("preferences") || btn.innerHTML.toLowerCase().includes("settings") || btn.innerHTML.toLowerCase().includes("einstellungen") || btn.innerHTML.toLowerCase().includes("personalise") || btn.innerHTML.toLowerCase().includes("verwalten") || btn.innerHTML.toLowerCase().includes("anpassen") || btn.innerHTML.toLowerCase().includes("zwecke")) {
       btn.click();
       console.log("[#] Clicked button ", btn.innerHTML);
       console.log("[#] Greater z index:");
       const greaterZ = greaterZIndex(selector);
-      findCookieClasses(greaterZ[greaterZ.length - 1]);
+      setTimeout(() => findCookieClasses(greaterZ[greaterZ.length - 1]), 1000);
     }
   });
 };
@@ -72,7 +72,8 @@ const findCookieClasses = function (popup) {
     // if (text) console.log(text.textContent);
     const maybelabel = findTextInElement(c, 5);
     if (maybelabel) {
-      console.log(findTextInElement(c, 5));
+      if (c.checked) console.log("- [x] ", maybelabel);
+      else console.log("- [ ] ", maybelabel);
     } else {
       console.log("[#] Found no label");
     }
