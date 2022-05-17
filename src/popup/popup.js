@@ -61,6 +61,27 @@ function showCMPResult() {
   });
 }
 
+const classIndexToString = (idx) => {
+  switch (idx) {
+    case -1:
+      return "Unknown";
+    case 0:
+      return "Necessary";
+    case 1:
+      return "Functionality";
+    case 2:
+      return "Analytical";
+    case 3:
+      return "Advertising";
+    case 4:
+      return "Uncategorized";
+    case 5:
+      return "Social Media";
+    default:
+      return "Invalid Category Index";
+  }
+};
+
 // list cookies
 function showCookieResult() {
   chrome.runtime.sendMessage("get_cookies", function (cookies) {
@@ -72,6 +93,8 @@ function showCookieResult() {
         cookies[i].name +
         "</td><td>" +
         cookies[i].domain +
+        "</td><td>" +
+        classIndexToString(cookies[i].current_label) +
         "</td>";
       cookieTable.appendChild(elCookie);
     }
