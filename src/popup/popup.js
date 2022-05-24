@@ -91,9 +91,9 @@ function showCookieResult() {
       elCookie.innerHTML =
         "<td>" +
         cookies[i].name +
-        "</td><td>" +
+        "</td><td><i>" +
         cookies[i].domain +
-        "</td><td>" +
+        "</i></td><td>" +
         classIndexToString(cookies[i].current_label) +
         "</td>";
       cookieTable.appendChild(elCookie);

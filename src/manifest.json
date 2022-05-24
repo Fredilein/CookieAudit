@@ -21,7 +21,7 @@
   "content_scripts": [
       {
           "matches": ["<all_urls>"],
-          "js": ["content/cmp.js"]
+          "js": ["content/banner.js"]
       }
   ],
   "permissions": [

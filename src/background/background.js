@@ -1,6 +1,7 @@
 import { escapeString, datetimeToExpiry, urlToUniformDomain, classIndexToString } from "/modules/globals.js";
 import { extractFeatures } from "/modules/extractor.js";
 import { predictClass } from "/modules/predictor.js";
+import { analyzeCMP } from "/modules/cmp.js";
 
 var historyDB = undefined;
 const openDBRequest = indexedDB.open("CookieDB", 1);
@@ -267,6 +268,7 @@ const classifyCookie = async function (_, feature_input) {
  * @param {Object} storeUpdate Whether
  */
  const handleCookie = async function (newCookie, storeUpdate, overrideTimeCheck){
+
     // First, if consent is given, check if the cookie has already been stored.
     let serializedCookie, storedCookie;
     try {
@@ -293,6 +295,7 @@ const classifyCookie = async function (_, feature_input) {
     console.assert(clabel !== undefined, "Stored cookie label was undefined!!");
 
     if (overrideTimeCheck || clabel === -1 || elapsed > MINTIME) {
+        analyzeCMP(newCookie);       
         clabel = await classifyCookie(newCookie, serializedCookie);
 
         // Update timestamp and label of the stored cookie
