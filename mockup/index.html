@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="mockup.css" />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+
+    <!-- Locally included FontAwesome for some eyecandy (TODO: Throw out unused icons) -->
+    <link href="./assets/css/all.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="padded">
+      <h1><i class="fa-solid fa-cookie-bite"></i> CookieAudit</h1>
+
+      <p class="text-center">Scanning <i>example.com</i>...</p>
+      <div class="box box-cmp">
+        <div class="d-flex justify-content-between">
+          <div><b>CMP</b></div>
+          <div><i>Cookiebot</i></div>
+        </div>
+        <div class="d-flex justify-content-between">
+          <div><b>Consent given</b></div>
+          <div><i>Necessary</i></div>
+        </div>
+      </div>
+
+      <div class="box box-cookies">
+        <p><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
+        <p><i>example_cookie</i> was classified as <i>Analytical</i></p>
+      </div>
+      <div class="box box-cookies">
+        <p><i class="fa-solid fa-circle-exclamation"></i> <b>Cookie set prior to consent</b></p>
+        <p><i>early_cookie</i> was set before interaction with the CMP</p>
+      </div>
+
+      <button type="button" class="btn btn-outline-dark btn-endscan"><i class="fa-solid fa-stop"></i> End Scan</button>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

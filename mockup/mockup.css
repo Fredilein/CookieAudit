@@ -1,0 +1,35 @@
+html {
+    color: white;
+}
+
+body {
+    min-width: 250px;
+}
+
+.padded {
+  padding: 10px;
+}
+
+.btn-delcookies {
+  width: 100%;
+}
+
+.box {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 0.375rem;
+}
+
+.box-cmp {
+  background-color: #f8f9fa;
+  border-left: #dee2e6 3px solid;
+}
+
+.box-cookies {
+  background-color: #f1aeb5;
+  border-left: #e35d6a 3px solid;
+}
+
+.btn-endscan {
+  width: 100%;
+}
