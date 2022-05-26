@@ -22,7 +22,9 @@
     <div class="padded">
       <h1><i class="fa-solid fa-cookie-bite"></i> CookieAudit</h1>
 
-      <p class="text-center">Scanning <i>example.com</i>...</p>
+      <button class="btn btn-settings"><i class="fa-solid fa-gear fa-lg"></i></button>
+
+      <p class="text-center">Auditing <i>example.com</i>...</p>
       <div class="box box-cmp">
         <div class="d-flex justify-content-between">
           <div><b>CMP</b></div>
@@ -30,20 +32,24 @@
         </div>
         <div class="d-flex justify-content-between">
           <div><b>Consent given</b></div>
-          <div><i>Necessary</i></div>
+          <div><i>Necessary only</i></div>
         </div>
       </div>
 
-      <div class="box box-cookies">
-        <p><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
-        <p><i>example_cookie</i> was classified as <i>Analytical</i></p>
+      <div class="box box-cookies" style="margin-bottom: 5px">
+        <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
+        <p class="tip-line"><i>example_cookie</i> was classified as <i>Analytical</i></p>
       </div>
       <div class="box box-cookies">
-        <p><i class="fa-solid fa-circle-exclamation"></i> <b>Cookie set prior to consent</b></p>
-        <p><i>early_cookie</i> was set before interaction with the CMP</p>
+        <p class="title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Cookie set prior to consent</b></p>
+        <p class="tip-line"><i>early_cookie</i> was set before interaction with the CMP</p>
       </div>
 
-      <button type="button" class="btn btn-outline-dark btn-endscan"><i class="fa-solid fa-stop"></i> End Scan</button>
+      <h4>Tips</h4>
+      <p class="tip-line"><i class="fa-solid fa-check tipitem"></i> Navigate to all subpages</p>
+      <p class="tip-line"><i class="fa-regular fa-square tipitem"></i> Interact with the comment form</p>
+
+      <button type="button" class="btn btn-light btn-endscan shadow-sm"><i class="fa-solid fa-stop"></i> End Audit</button>
     </div>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
