@@ -3,6 +3,8 @@ import { extractFeatures } from "/modules/extractor.js";
 import { predictClass } from "/modules/predictor.js";
 import { analyzeCMP } from "/modules/cmp.js";
 
+var scanState = 0;
+
 var historyDB = undefined;
 const openDBRequest = indexedDB.open("CookieDB", 1);
 
@@ -229,6 +231,17 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       // console.log(`sending cookies to frontend`);
       sendResponse(cookies);
     });
+  } else if (request === "get_warnings") {
+    getCookiesFromStorage().then((cookies) => {
+      const warnings = getWarnings(cookies);
+      sendResponse(warnings);
+    });
+  } else if (request === "get_scanstate") {
+    sendResponse(scanState);
+  } else if (request === "start_scan") {
+    scanState = 1;
+  } else if (request === "stop_scan") {
+    scanState = 0;
   } else if (request === "clear_cookies") {
     console.log("clearing cookies...");
     clearCookies().then((res) => {
@@ -256,11 +269,15 @@ const classifyCookie = async function (_, feature_input) {
   return label;
 };
 
-// const handleCookie = function (cookie) {
-//   const serializedCookie = createFEInput(cookie);
-//   console.log("Cookie: ", cookie.name);
-//   const label = classifyCookie(cookie, serializedCookie);
-// };
+const getWarnings = function (cookies) {
+  let disallowed = [];
+  for (let i in cookies) {
+    if (cookies[i].current_label > 0) {
+      disallowed.push(cookies[i]);
+    }
+  }
+  return disallowed;
+}
 
 /**
  * Retrieve the cookie, classify it, then apply the policy.
