@@ -283,7 +283,6 @@ const setupFunctions = {
  * @param {Object} fconfig   Configuration object, which defines the features to be extracted.
  */
 const setupFeatureResourcesCallback = function (fconfig) {
-  console.log("fconfig: ", fconfig);
   feature_config = fconfig;
 
   let maybeRunSetup = function (featArray) {

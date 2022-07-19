@@ -236,6 +236,15 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       const warnings = getWarnings(cookies);
       sendResponse(warnings);
     });
+  } else if (request === "get_analysis") {
+    getCookiesFromStorage().then((cookies) => {
+      const cmp = getCMP(cookies);
+      if (cmp) {
+        console.log("Background found CMP:", cmp);
+      }
+      const warnings = getWarnings(cookies);
+      sendResponse({cmp, warnings});
+    });
   } else if (request === "get_scanstate") {
     sendResponse(scanState);
   } else if (request === "start_scan") {
@@ -260,7 +269,7 @@ const classifyCookie = async function (_, feature_input) {
   // Feature extraction timing
   let features = extractFeatures(feature_input);
   let label = await predictClass(features, 3); // 3 from cblk_pscale default
-  console.log("Label: ", label, "(", classIndexToString(label), ")");
+  // console.log("Label: ", label, "(", classIndexToString(label), ")");
 
   // if (label < 0 && label > 3) {
   //     throw new Error(`Predicted label exceeded valid range: ${label}`);
@@ -277,6 +286,19 @@ const getWarnings = function (cookies) {
     }
   }
   return disallowed;
+}
+
+const getCMP = function (cookies) {
+  var recentCMP = null;
+  for (let i in cookies) {
+    const cmp = analyzeCMP(cookies[i]);
+    if (cmp != null && cmp.choices != null) {
+      return cmp;
+    } else if (cmp != null) {
+      recentCMP = cmp;
+    }
+  }
+  return recentCMP;
 }
 
 /**

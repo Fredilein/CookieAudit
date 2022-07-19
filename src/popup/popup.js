@@ -31,45 +31,91 @@ function deleteCookies() {
   });
 }
 
-function startStopScan() {
-  console.log("Starting/stopping scan...");
+async function getURL() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  // `tab` will either be a `tabs.Tab` instance or `undefined`.
+  let [tab] = await chrome.tabs.query(queryOptions);
+  return tab.url;
+}
+
+async function startStopScan() {
   chrome.storage.local.get("scan", (res) => {
-    console.log(res.scan);
     if (!res.scan.inProgress || res.scan.inProgress == false) {
       console.log("Starting scan...");
       deleteCookies();
       const scan = {
         'inProgress': true,
-        'warningsDisallowed': []
+        'cmp': null,
+        'warnings': []
       };
       chrome.storage.local.set({ scan });
       startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
       setContent();
+      // TODO: Not sure if good UX but fixes the update problem for now
+      window.close();
     } else {
       console.log("Stopping scan...");
       res.scan.inProgress = false;
       chrome.storage.local.set({"scan": res.scan});
       clearInterval(intervalID);
-      contentDiv.innerHTML = `<p>Scan summary here...</p>`;
-      startStopBtn.innerHTML = '<i class="fa-solid fa-radar"></i> Start Scan';
+      // contentDiv.innerHTML = `<p>Scan summary here...</p>`;
+      // TODO: Move to own function
+      contentDiv.innerHTML = `
+        <div id="summary">
+          <h4>CMP</h4>
+          <div id="summary-cmp"></div>
+          <div class="alert alert-info" role="alert">
+            Info on how we rate this CMP will be here soon.
+          </div>
+          <br/>
+          <h4>Disallowed cookies set</h4>
+          <div id="summary-warnings"></div>
+          <div class="alert alert-info" role="alert">
+            Info on how to fix this will be here soon.
+          </div>
+        </div>`;
+      const summaryWarningsDiv = document.getElementById("summary-warnings");
+      summaryWarningsDiv.innerHTML = "";
+      if (res.scan.warnings.length > 0) {
+        for (let i in res.scan.warnings) {
+          let elWarning = document.createElement("div");
+          elWarning.innerHTML = `
+            <p>${res.scan.warnings[i].name} <i>(${classIndexToString(res.scan.warnings[i].current_label)})</i></p>`;
+          summaryWarningsDiv.appendChild(elWarning);
+        }
+      } else {
+        summaryWarningsDiv.innerHTML = "No cookie violations detected";
+      }
+      if (res.scan.cmp) {
+        document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
+      }
+      startStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Scan';
     }
   });
 }
 
 function setContent() {
-  contentDiv.innerHTML = `
-      <p class="text-center">Auditing <i>example.com</i>...</p>
-      <div class="box box-cmp">
-        <div class="d-flex justify-content-between">
-          <div><b>CMP</b></div>
-          <div><i>Cookiebot</i></div>
-        </div>
-        <div class="d-flex justify-content-between">
-          <div><b>Consent given</b></div>
-          <div><i>Necessary only</i></div>
-        </div>
-      </div>
+  chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true
+  }, function(tabs) {
+      // and use that tab to fill in out title and url
+      var tab = tabs[0];
+      const prettyUrl = (tab) ? tab.url.replace(/(^\w+:|^)\/\//, '') : 'unknown URL';
+      contentDiv.innerHTML = `
+          <p class="text-center">Auditing <i id="scanurl">${prettyUrl}</i></p>
+          <div class="box box-cmp">
+            <div class="d-flex justify-content-between">
+              <div><b>CMP</b></div>
+              <div id="cmpdiv"><i>Unknown</i></div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div><b>Consent given</b></div>
+              <div id="choicesdiv"><i>Unknown (assume neccessary)</i></div>
+            </div>
+          </div>
       <div id="warnings"></div>`;
+  });
 }
 
 // content script which can access the page DOM
@@ -99,7 +145,6 @@ function analyzePage(url) {
 function showCMPResult() {
   chrome.storage.sync.get("detectedCMP", (CMP) => {
     cmpName = Object.values(CMP)[0];
-    console.log(cmpName);
     cmpDiv.innerHTML = "<strong>CMP:</strong> " + cmpName;
   });
 }
@@ -145,12 +190,18 @@ function showCookieResult() {
 }
 
 function updateCookieWarnings() {
-  chrome.runtime.sendMessage("get_warnings", function (cookies) {
+  chrome.runtime.sendMessage("get_analysis", function (analysis) {
     chrome.storage.local.get("scan", (res) => {
-      for (let i in cookies) {
-        if (!res.scan.warningsDisallowed.some(e => e.name === cookies[i].name)){
-          res.scan.warningsDisallowed.push(cookies[i]);
+      for (let i in analysis.warnings) {
+        if (!res.scan.warnings.some(e => e.name === analysis.warnings[i].name)){
+          res.scan.warnings.push(analysis.warnings[i]);
         }
+      }
+      if (analysis.cmp && !res.scan.cmp) {
+        res.scan.cmp = analysis.cmp;
+      }
+      if (analysis.cmp && analysis.cmp.choices && !res.scan.cmp.choices) {
+        res.scan.cmp.choices = analysis.cmp.choices;
       }
       chrome.storage.local.set({"scan": res.scan });
     });
@@ -159,35 +210,38 @@ function updateCookieWarnings() {
 
 function showCookieWarnings() {
   chrome.storage.local.get("scan", (res) => {
-    console.log('received warnings:' + res.scan.warningsDisallowed);
     const warningDiv = document.getElementById("warnings");
     warningDiv.innerHTML = "";
-    for (let i in res.scan.warningsDisallowed) {
+    for (let i in res.scan.warnings) {
       let elWarning = document.createElement("div");
       elWarning.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
         <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
-        <p class="tip-line"><i>${res.scan.warningsDisallowed[i].name}</i> was classified as <i>${classIndexToString(res.scan.warningsDisallowed[i].current_label)}</i></p>
+        <p class="tip-line"><i>${res.scan.warnings[i].name}</i> was classified as <i>${classIndexToString(res.scan.warnings[i].current_label)}</i></p>
       </div>`;
       warningDiv.appendChild(elWarning);
+    }
+    if (res.scan.cmp) {
+      document.getElementById("cmpdiv").innerHTML = res.scan.cmp.name;
+      if (res.scan.cmp.choices) {
+        document.getElementById("choicesdiv").innerHTML = res.scan.cmp.choices;
+      }
     }
   });
 }
 
 // Setup extension DOM
 var intervalID;
-console.log("Check if scan in progress..");
 chrome.storage.local.get("scan", (res) => {
   if (res.scan.inProgress == true) {
-    console.log("yes");
     setContent();
+    updateCookieWarnings();
+    showCookieWarnings();
     startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
     intervalID = window.setInterval(() => {
       updateCookieWarnings();
       showCookieWarnings();
     }, 3000);
-  } else {
-    console.log("no");
   }
 });
 
