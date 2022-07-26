@@ -1,8 +1,13 @@
 {
   "name": "CookieAudit",
-  "description": "Semesterproject",
+  "description": "Check if a website respects your cookie preferences.",
   "version": "0.1",
   "manifest_version": 3,
+   "icons": {
+    "16": "./logo/icon16.png",
+    "32": "./logo/icon32.png",
+    "128": "./logo/icon128.png"
+  },
   "background": {
     "service_worker": "background/background.js",
     "type": "module"
@@ -18,20 +23,11 @@
   "action": {
     "default_popup": "popup/popup.html"
   },
-  "content_scripts": [
-      {
-          "matches": ["<all_urls>"],
-          "js": ["content/banner.js"]
-      }
-  ],
   "permissions": [
     "cookies",
     "activeTab",
-    "tabs",
     "storage",
-    "unlimitedStorage",
-    "scripting",
-    "debugger"
+    "unlimitedStorage"
   ],
   "host_permissions": ["<all_urls>", "*://*/*"]
 }
