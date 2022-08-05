@@ -40,7 +40,7 @@ async function getURL() {
 
 async function startStopScan() {
   chrome.storage.local.get("scan", (res) => {
-    if (!res.scan.inProgress || res.scan.inProgress == false) {
+    if (!res || !res.scan || !res.scan.inProgress || res.scan.inProgress == false) {
       console.log("Starting scan...");
       deleteCookies();
       const scan = {
