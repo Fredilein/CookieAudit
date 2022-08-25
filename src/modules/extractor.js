@@ -894,12 +894,21 @@ const extractFeatures = function (cookieDat) {
   let curr_idx = 0;
   let cfunc = undefined;
   let var_data = cookieDat["variable_data"];
+  // TODO: Read num_updates & num_diffs from features.json
+  // let max_updates = Math.min(
+  //   feature_config["num_updates"],
+  //   cookieDat["variable_data"].length
+  // );
+  // let max_diffs = Math.min(
+  //     feature_config["num_diffs"],
+  //     cookieDat["variable_data"].length - 1
+  // );
   let max_updates = Math.min(
-    feature_config["num_updates"],
-    cookieDat["variable_data"].length
+      1,
+      cookieDat["variable_data"].length
   );
   let max_diffs = Math.min(
-    feature_config["num_diffs"],
+    1,
     cookieDat["variable_data"].length - 1
   );
 

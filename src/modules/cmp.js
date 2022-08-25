@@ -2,18 +2,15 @@ export const analyzeCMP = function (cookie) {
   var choices;
   switch (cookie.name) {
     case "OptanonConsent":
-      console.log(cookie.name, " - ", cookie.domain);
-      console.log(cookie.value);
-      choices = getOnetrustChoices(cookie.value);
-      console.log(choices);
-      return {
+      choices = getOnetrustChoices(cookie.variable_data[0].value);
+      console.log("choices: ", choices);
+      const retJSON = {
         'name': 'OneTrust',
         'choices': choices
       };
+      return retJSON
     case "CookieConsent":
-      console.log(cookie.name, " - ", cookie.domain);
-      console.log(cookie.value);
-      choices = getCookiebotChoices(cookie.value);
+      choices = getCookiebotChoices(cookie.variable_data[0].value);
       console.log(choices);
       return {
         'name': 'Cookiebot',
