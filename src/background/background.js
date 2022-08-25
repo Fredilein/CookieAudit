@@ -39,12 +39,22 @@ openDBRequest.onerror = function (event) {
   );
 };
 
+/**
+ * Construct a string formatted key that uniquely identifies the given cookie object.
+ * @param {Object}    cookieDat Stores the cookie data, expects attributes name, domain and path.
+ * @returns {String}  string representing the cookie's key
+ */
 const constructKeyFromCookie = function (cookieDat) {
   return `${cookieDat.name};${urlToUniformDomain(cookieDat.domain)};${
     cookieDat.path
   }`;
 };
 
+/**
+ * Creates a new feature extraction input object from the raw cookie data.
+ * @param  {Object} cookie    Raw cookie data as received from the browser.
+ * @return {Promise<object>}  Feature Extraction input object.
+ */
 const createFEInput = function (cookie) {
   return {
     name: escapeString(cookie.name),
@@ -106,28 +116,6 @@ const updateFEInput = async function(storedFEInput, rawCookie) {
  * Insert serialized cookie into IndexedDB storage via a transaction.
  * @param {Object} serializedCookie Cookie to insert into storage.
  */
-// const insertCookieIntoStorage = function (cookie) {
-//   if (historyDB !== undefined) {
-//     let putRequest = historyDB
-//       .transaction("cookies", "readwrite")
-//       .objectStore("cookies")
-//       .put(cookie, cookie.name);
-//     putRequest.onerror = function (event) {
-//       console.error(
-//         `Failed to insert cookie (${cookie.name}) into IndexedDB storage: ${event.target.errorCode}`
-//       );
-//     };
-//   } else {
-//     console.error(
-//       "Could not insert cookie because database connection is closed!"
-//     );
-//   }
-// };
-
-/**
- * Insert serialized cookie into IndexedDB storage via a transaction.
- * @param {Object} serializedCookie Cookie to insert into storage.
- */
 const insertCookieIntoStorage = function(serializedCookie) {
     if (historyDB !== undefined) {
         let ckey = constructKeyFromCookie(serializedCookie);
@@ -140,7 +128,9 @@ const insertCookieIntoStorage = function(serializedCookie) {
     }
 }
 
-
+/**
+ * Remove a cookie from the browser and from historyDB
+ */
 const clearCookies = function () {
   // First we delete the cookies from the browser
   var removeCookie = function (cookie) {
@@ -174,6 +164,10 @@ const clearCookies = function () {
   }
 };
 
+/**
+ * Retrieve all cookies from IndexedDB storage via a transaction.
+ * @returns {Promise<Object>} Array of all cookies.
+ */
 const getCookiesFromStorage = async function () {
   if (historyDB !== undefined) {
     return new Promise((resolve) => {
@@ -195,7 +189,7 @@ const getCookiesFromStorage = async function () {
     });
   } else {
     console.error(
-      "Could not insert cookie because database connection is closed!"
+      "Could not get cookie because database connection is closed!"
     );
   }
 };
@@ -225,16 +219,14 @@ const retrieveCookieFromStorage = function(cookieDat) {
     }
 }
 
+/**
+ * Handlers for all messages sent to the background script.
+ */
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
   if (request === "get_cookies") {
     getCookiesFromStorage().then((cookies) => {
       // console.log(`sending cookies to frontend`);
       sendResponse(cookies);
-    });
-  } else if (request === "get_warnings") {
-    getCookiesFromStorage().then((cookies) => {
-      const warnings = getWarnings(cookies);
-      sendResponse(warnings);
     });
   } else if (request === "get_analysis") {
     getCookiesFromStorage().then((cookies) => {
@@ -277,6 +269,12 @@ const classifyCookie = async function (_, feature_input) {
   return label;
 };
 
+/**
+ * Currently this function returns all cookies which aren't necessary.
+ * In the future it should return cookies depending on which choices the user selected
+ * @param  {Object} cookies     Array of cookies
+ * @return {Object} disallowed  Disallowed cookies
+ */
 const getWarnings = function (cookies) {
   let disallowed = [];
   for (let i in cookies) {
@@ -287,8 +285,11 @@ const getWarnings = function (cookies) {
   return disallowed;
 }
 
-// return CMP information
-// tries to find a cookie which also encodes the user choices
+/**
+ * Checks if any cookie stores information regarding used CMP and user choices
+ * @param cookies               All cookies to check
+ * @returns {null|{choices}|*}  Either CMP + choices or CMP or undefined
+ */
 const getCMP = function (cookies) {
   var recentCMP = null;
   for (let i in cookies) {
@@ -357,7 +358,11 @@ const getCMP = function (cookies) {
     insertCookieIntoStorage(serializedCookie);
 }
 
-
+/**
+ * Listener that is executed any time a cookie is added, updated or removed.
+ * Classifies the cookie and rejects it based on user policy.
+ * @param {Object} changeInfo  Contains the cookie itself, and cause info.
+ */
 chrome.cookies.onChanged.addListener((changeInfo) => {
   if (!changeInfo.removed && historyDB) {
     handleCookie(changeInfo.cookie, true, false);

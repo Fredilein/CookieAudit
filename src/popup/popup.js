@@ -11,6 +11,10 @@ function deleteCookies() {
   });
 }
 
+/**
+ * Retrieve Url of the active tab.
+ * @returns {Promise<string>} Url.
+ */
 async function getURL() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   // `tab` will either be a `tabs.Tab` instance or `undefined`.
@@ -18,6 +22,11 @@ async function getURL() {
   return tab.url;
 }
 
+/**
+ * Handles setup of a scan as well as everything after the scan.
+ * TODO: Split into multiple functions for less confusion
+ * @returns {Promise<void>}
+ */
 async function startStopScan() {
   const url = await getURL();
   chrome.storage.local.get("scan", (res) => {
@@ -85,6 +94,10 @@ async function startStopScan() {
   });
 }
 
+/**
+ * Sets the basic html strcture of the extension during a scan.
+ * The content of these divs is changed upon receiving information while scanning.
+ */
 function setContent() {
   contentDiv.innerHTML = `
       <p class="text-center">Auditing <i id="scanurl">...</i></p>
@@ -101,7 +114,11 @@ function setContent() {
   <div id="warnings"></div>`;
 }
 
-
+/**
+ * Translate a label from the classifier into the corresponding purpose string.
+ * @param idx         Label
+ * @returns {string}  Cookie purpose string
+ */
 const classIndexToString = (idx) => {
   switch (idx) {
     case -1:
@@ -123,6 +140,10 @@ const classIndexToString = (idx) => {
   }
 };
 
+/**
+ * Retrieve all information (warnings and cmp) from the background script
+ * and update the local scan object.
+ */
 function updateCookieWarnings() {
   chrome.runtime.sendMessage("get_analysis", function (analysis) {
     chrome.storage.local.get("scan", (res) => {
@@ -146,6 +167,9 @@ function updateCookieWarnings() {
   });
 }
 
+/**
+ * Display all information collected by the background script during a scan.
+ */
 function renderScan() {
   chrome.storage.local.get("scan", (res) => {
     console.log("rendering:", res.scan);
@@ -194,7 +218,7 @@ chrome.storage.local.get("scan", (res) => {
   }
 });
 
-// onclick events are not allowed, therefore we have to addEventListener to buttons etc.
+// onclick events are not allowed, therefore we have to addEventListener to buttons.
 document.addEventListener("DOMContentLoaded", function () {
   startStopBtn.addEventListener("click", function () {
     startStopScan();
