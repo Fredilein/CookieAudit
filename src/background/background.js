@@ -269,7 +269,6 @@ const classifyCookie = async function (_, feature_input) {
   // Feature extraction timing
   let features = extractFeatures(feature_input);
   let label = await predictClass(features, 3); // 3 from cblk_pscale default
-  // console.log("Label: ", label, "(", classIndexToString(label), ")");
 
   // if (label < 0 && label > 3) {
   //     throw new Error(`Predicted label exceeded valid range: ${label}`);
@@ -288,6 +287,8 @@ const getWarnings = function (cookies) {
   return disallowed;
 }
 
+// return CMP information
+// tries to find a cookie which also encodes the user choices
 const getCMP = function (cookies) {
   var recentCMP = null;
   for (let i in cookies) {
@@ -334,7 +335,7 @@ const getCMP = function (cookies) {
     console.assert(clabel !== undefined, "Stored cookie label was undefined!!");
 
     if (overrideTimeCheck || clabel === -1 || elapsed > MINTIME) {
-        analyzeCMP(newCookie);       
+        // analyzeCMP(newCookie);
         clabel = await classifyCookie(newCookie, serializedCookie);
 
         // Update timestamp and label of the stored cookie
@@ -358,21 +359,7 @@ const getCMP = function (cookies) {
 
 
 chrome.cookies.onChanged.addListener((changeInfo) => {
-  if (!changeInfo.removed) {
-    // insertCookieIntoStorage(changeInfo.cookie);
+  if (!changeInfo.removed && historyDB) {
     handleCookie(changeInfo.cookie, true, false);
   }
 });
-
-// chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-//     if (changeInfo.status === 'complete' && /^http/.test(tab.url)) {
-//         chrome.scripting.executeScript({
-//             target: { tabId: tabId },
-//             files: ["../content/cmp.js"]
-//         })
-//         .then(() => {
-//             console.log("INJECTED THE FOREGROUND SCRIPT.");
-//         })
-//         .catch(err => console.log(err));
-//     }
-// });

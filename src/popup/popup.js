@@ -4,27 +4,6 @@ let cookieTable = document.getElementById("cookieTableBody");
 let contentDiv = document.getElementById("content");
 let startStopBtn = document.getElementById("startStopScan");
 
-// get currelty open tab to analyze DOM and get cookies
-// chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-//   if (!Array.isArray(tabs)) {
-//     return;
-//   }
-//   let url = new URL(tabs[0].url);
-//   url = url.hostname.replace(/www/gi, "");
-
-//   //   // run content scipt for DOM access
-//   let activeTab = tabs[0].id;
-//   activeTab.executeScript;
-//   chrome.scripting.executeScript(
-//     {
-//       target: { tabId: activeTab },
-//       func: analyzePage,
-//       args: [url],
-//     },
-//     showCMPResult
-//   );
-// });
-
 function deleteCookies() {
   chrome.runtime.sendMessage("clear_cookies", function (_) {
     // showCookieResult();
@@ -118,37 +97,6 @@ function setContent() {
   });
 }
 
-// content script which can access the page DOM
-function analyzePage(url) {
-  // detect CMP and save to extension storage
-  let knownCMPs = {
-    "consent.cookiebot.com": "cookiebot", // Cookiebot
-    "onetrust.com": "OneTrust", // OneTrust
-    "cookielaw.org": "OneTrust",
-    "blob.core.windows.net": "OneTrust",
-    "optanon.blob.core.windows.net": "OneTrust",
-    "cookiepro.com": "OneTrust",
-    "app.termly.io": "Termly", // Termly
-  };
-  let detectedCMP = "Unknown CMP";
-  let source = document.getElementsByTagName("html")[0].innerHTML;
-  for (domain in knownCMPs) {
-    if (source.includes(domain)) {
-      console.log("Detected CMP:" + knownCMPs[domain]);
-      detectedCMP = knownCMPs[domain];
-    }
-  }
-  chrome.storage.sync.set({ detectedCMP });
-}
-
-// print detected CMP
-function showCMPResult() {
-  chrome.storage.sync.get("detectedCMP", (CMP) => {
-    cmpName = Object.values(CMP)[0];
-    cmpDiv.innerHTML = "<strong>CMP:</strong> " + cmpName;
-  });
-}
-
 const classIndexToString = (idx) => {
   switch (idx) {
     case -1:
@@ -170,40 +118,25 @@ const classIndexToString = (idx) => {
   }
 };
 
-// list cookies
-function showCookieResult() {
-  chrome.runtime.sendMessage("get_cookies", function (cookies) {
-    cookieTable.innerHTML = "";
-    for (let i in cookies) {
-      let elCookie = document.createElement("tr");
-      elCookie.innerHTML =
-        "<td>" +
-        cookies[i].name +
-        "</td><td><i>" +
-        cookies[i].domain +
-        "</i></td><td>" +
-        classIndexToString(cookies[i].current_label) +
-        "</td>";
-      cookieTable.appendChild(elCookie);
-    }
-  });
-}
-
 function updateCookieWarnings() {
   chrome.runtime.sendMessage("get_analysis", function (analysis) {
     chrome.storage.local.get("scan", (res) => {
       for (let i in analysis.warnings) {
+        // add all new warnings to scan object
         if (!res.scan.warnings.some(e => e.name === analysis.warnings[i].name)){
           res.scan.warnings.push(analysis.warnings[i]);
         }
       }
+      // update CMP if not already in scan object
       if (analysis.cmp && !res.scan.cmp) {
         res.scan.cmp = analysis.cmp;
       }
+      // update CMP choices if not already in scan object
       if (analysis.cmp && analysis.cmp.choices && !res.scan.cmp.choices) {
         res.scan.cmp.choices = analysis.cmp.choices;
       }
       chrome.storage.local.set({"scan": res.scan });
+      showCookieWarnings();
     });
   });
 }
@@ -236,21 +169,17 @@ chrome.storage.local.get("scan", (res) => {
   if (res.scan.inProgress == true) {
     setContent();
     updateCookieWarnings();
-    showCookieWarnings();
+    // showCookieWarnings();
     startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
     intervalID = window.setInterval(() => {
       updateCookieWarnings();
-      showCookieWarnings();
+      // showCookieWarnings();
     }, 3000);
   }
 });
 
 // onclick events are not allowed, therefore we have to addEventListener to buttons etc.
 document.addEventListener("DOMContentLoaded", function () {
-  // var btn = document.getElementById("delete");
-  // btn.addEventListener("click", function () {
-  //   deleteCookies();
-  // });
   startStopBtn.addEventListener("click", function () {
     startStopScan();
   });
