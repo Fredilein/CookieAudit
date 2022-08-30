@@ -144,7 +144,7 @@
       "name": "gestalt_total",
       "desc": "Mean and Standard Deviation of the Gestalt Pattern similarity ratio over all update differences.",
       "function": "feature_gestalt_mean_and_stddev",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 2,
       "args": {}
     },
@@ -428,7 +428,7 @@
       "name": "gestalt_similarity",
       "desc": "Ordinal Feature. Compute the ratio of similarity between consecutive cookie updates based on Gestalt-Pattern matching. \n NOTE: might not be available for the extension.",
       "function": "feature_gestalt_pattern_ratio",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },

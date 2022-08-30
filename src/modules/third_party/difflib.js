@@ -137,6 +137,7 @@ export var difflib = {
 				}
 			}
 			
+			//var isjunk = (this.isjunk instanceof Function) ? this.isjunk : difflib.defaultJunkFunction;
 			var isjunk = this.isjunk;
 			var junkdict = {};
 			if (isjunk) {
@@ -361,7 +362,7 @@ export var difflib = {
 		}
 		
 		this.ratio = function () {
-			matches = difflib.__reduce(
+			const matches = difflib.__reduce(
 							function (sum, triple) { return sum + triple[triple.length - 1]; },
 							this.get_matching_blocks(), 0);
 			return difflib.__calculate_ratio(matches, this.a.length + this.b.length);

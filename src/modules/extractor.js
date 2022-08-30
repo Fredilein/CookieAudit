@@ -300,7 +300,7 @@ const setupFeatureResourcesCallback = function (fconfig) {
 
   maybeRunSetup(feature_config["per_cookie_features"]);
   maybeRunSetup(feature_config["per_update_features"]);
-//   maybeRunSetup(feature_config["per_diff_features"]);
+  maybeRunSetup(feature_config["per_diff_features"]);
 };
 
 // retrieve the configuration
@@ -386,15 +386,14 @@ const perCookieFeatures = {
       sparse[curr_idx] = 1.0;
     }
   },
-  // Disabled
   feature_gestalt_mean_and_stddev: (sparse, curr_idx, cookie_data, args) => {
     let values = [];
     let cookieUpdates = cookie_data["variable_data"];
     for (let i = 0; i < cookieUpdates.length - 1; i++) {
       let s = new difflib.SequenceMatcher(
-        null,
         cookieUpdates[i]["value"],
-        cookieUpdates[i + 1]["value"]
+        cookieUpdates[i + 1]["value"],
+          null
       );
       values.push(s.ratio());
     }
@@ -871,9 +870,9 @@ const perDiffFeatures = {
     args
   ) => {
     let s = new difflib.SequenceMatcher(
-      null,
       prev_data["value"],
-      curr_data["value"]
+      curr_data["value"],
+        null
     );
     sparse[curr_idx] = s.ratio();
   },
@@ -964,7 +963,7 @@ const extractFeatures = function (cookieDat) {
       curr_idx += entry["vector_size"] * feature_config["num_diffs"];
     }
   }
-  
+
   return sparseFeatures;
 };
 
