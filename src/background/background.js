@@ -3,7 +3,7 @@ import { extractFeatures } from "/modules/extractor.js";
 import { predictClass } from "/modules/predictor.js";
 import { analyzeCMP } from "/modules/cmp.js";
 
-var scanState = 0;
+const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
 var historyDB = undefined;
 const openDBRequest = indexedDB.open("CookieDB", 1);
@@ -260,11 +260,11 @@ const classifyCookie = async function (_, feature_input) {
  */
 const analyzeCookie = function (cookie) {
   chrome.storage.local.get("scan", (res) => {
-    if (!res || !res.scan || !res.scan.inProgress) {
+    if (!res || !res.scan || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
       return;
     }
     // getWarnings
-    if (cookie["current_label"] > 0) {
+    if (cookie["current_label"] > 0 && !res.scan.warnings.some((c) => c.name === cookie.name)) {
       res.scan.warnings.push(cookie);
     }
     // getCMP

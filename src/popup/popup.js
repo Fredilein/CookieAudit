@@ -5,6 +5,8 @@ let contentDiv = document.getElementById("content");
 let startStopBtn = document.getElementById("startStopScan");
 let usageDiv = document.getElementById("usageinfo");
 
+const SCANSTAGE = ["initial", "necessary", "all", "finished"];
+
 function deleteCookies() {
   chrome.runtime.sendMessage("clear_cookies", function (_) {
     // showCookieResult();
@@ -30,11 +32,11 @@ async function getURL() {
 async function startStopScan() {
   const url = await getURL();
   chrome.storage.local.get("scan", (res) => {
-    if (!res || !res.scan || !res.scan.inProgress || res.scan.inProgress === false) {
+    if (!res || !res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
       console.log("Starting scan...");
       deleteCookies();
       const scan = {
-        'inProgress': true,
+        'stage': SCANSTAGE[1],
         'cmp': null,
         'url': url,
         'warnings': [],
@@ -49,48 +51,10 @@ async function startStopScan() {
       window.close();
     } else {
       console.log("Stopping scan...");
-      res.scan.inProgress = false;
+      res.scan.stage = SCANSTAGE[3];
       chrome.storage.local.set({"scan": res.scan});
       clearInterval(intervalID);
-      // contentDiv.innerHTML = `<p>Scan summary here...</p>`;
-      // TODO: Move to own function
-      contentDiv.innerHTML = `
-        <div id="summary">
-          <div id="summary-url"></div>
-          <h4>CMP</h4>
-          <div id="summary-cmp"></div>
-          <div class="alert alert-info" role="alert">
-            Info on how we rate this CMP will be here soon.
-          </div>
-          <br/>
-          <h4>Disallowed cookies set</h4>
-          <div id="summary-warnings"></div>
-          <div class="alert alert-info" role="alert">
-            Info on how to fix this will be here soon.
-          </div>
-        </div>`;
-      // Display warnings
-      const summaryWarningsDiv = document.getElementById("summary-warnings");
-      summaryWarningsDiv.innerHTML = "";
-      if (res.scan.warnings.length > 0) {
-        for (let i in res.scan.warnings) {
-          let elWarning = document.createElement("div");
-          elWarning.innerHTML = `
-            <p>${res.scan.warnings[i].name} <i>(${classIndexToString(res.scan.warnings[i].current_label)})</i></p>`;
-          summaryWarningsDiv.appendChild(elWarning);
-        }
-      } else {
-        summaryWarningsDiv.innerHTML = "No cookie violations detected";
-      }
-      // Display cmp info
-      if (res.scan.cmp) {
-        document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
-      }
-      // Display url
-      if (res.scan.cmp) {
-        document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
-      }
-      startStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Scan';
+      showSummary();
     }
   });
 }
@@ -113,6 +77,48 @@ function setContent() {
         </div>
       </div>
   <div id="warnings"></div>`;
+}
+
+function showSummary() {
+  chrome.storage.local.get("scan", (res) => {
+    contentDiv.innerHTML = `
+        <div id="summary">
+          <div id="summary-url"></div>
+          <h4>CMP</h4>
+          <div id="summary-cmp"></div>
+          <div class="alert alert-info" role="alert">
+            Info on how we rate this CMP will be here soon.
+          </div>
+          <br/>
+          <h4>Disallowed cookies set</h4>
+          <div id="summary-warnings"></div>
+          <div class="alert alert-info" role="alert">
+            Info on how to fix this will be here soon.
+          </div>
+        </div>`;
+    // Display warnings
+    const summaryWarningsDiv = document.getElementById("summary-warnings");
+    summaryWarningsDiv.innerHTML = "";
+    if (res.scan.warnings.length > 0) {
+      for (let i in res.scan.warnings) {
+        let elWarning = document.createElement("div");
+        elWarning.innerHTML = `
+              <p>${res.scan.warnings[i].name} <i>(${classIndexToString(res.scan.warnings[i].current_label)})</i></p>`;
+        summaryWarningsDiv.appendChild(elWarning);
+      }
+    } else {
+      summaryWarningsDiv.innerHTML = "No cookie violations detected";
+    }
+    // Display cmp info
+    if (res.scan.cmp) {
+      document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
+    }
+    // Display url
+    if (res.scan.cmp) {
+      document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
+    }
+    startStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Scan';
+  });
 }
 
 /**
@@ -146,8 +152,6 @@ const classIndexToString = (idx) => {
  */
 function renderScan() {
   chrome.storage.local.get("scan", (res) => {
-    console.log("rendering:", res.scan);
-
     // render warnings
     const warningDiv = document.getElementById("warnings");
     warningDiv.innerHTML = "";
@@ -179,7 +183,7 @@ function renderScan() {
 // Setup extension DOM
 var intervalID;
 chrome.storage.local.get("scan", (res) => {
-  if (res.scan && res.scan.inProgress === true) {
+  if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
     usageDiv.innerHTML = '';
     setContent();
     renderScan();

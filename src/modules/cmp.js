@@ -3,15 +3,12 @@ export const analyzeCMP = function (cookie) {
   switch (cookie.name) {
     case "OptanonConsent":
       choices = getOnetrustChoices(cookie.variable_data[0].value);
-      console.log("choices: ", choices);
-      const retJSON = {
+      return {
         'name': 'OneTrust',
         'choices': choices
       };
-      return retJSON
     case "CookieConsent":
       choices = getCookiebotChoices(cookie.variable_data[0].value);
-      console.log(choices);
       return {
         'name': 'Cookiebot',
         'choices': choices
@@ -77,7 +74,7 @@ const getCookiebotChoices = function (value) {
   var choices = [];
   for (let i = 1; i < 5; i++) {
     const cat = groups[i].split(':');
-    if (cat[1] == 'true') {
+    if (cat[1] === 'true') {
       choices.push(cat[0]);
     }
   }
