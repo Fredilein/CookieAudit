@@ -225,26 +225,9 @@ const retrieveCookieFromStorage = function(cookieDat) {
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
   if (request === "get_cookies") {
     getCookiesFromStorage().then((cookies) => {
-      // console.log(`sending cookies to frontend`);
       sendResponse(cookies);
     });
-  } else if (request === "get_analysis") {
-    getCookiesFromStorage().then((cookies) => {
-      const cmp = getCMP(cookies);
-      if (cmp) {
-        console.log("Background found CMP:", cmp);
-      }
-      const warnings = getWarnings(cookies);
-      sendResponse({cmp, warnings});
-    });
-  } else if (request === "get_scanstate") {
-    sendResponse(scanState);
-  } else if (request === "start_scan") {
-    scanState = 1;
-  } else if (request === "stop_scan") {
-    scanState = 0;
   } else if (request === "clear_cookies") {
-    console.log("clearing cookies...");
     clearCookies().then((res) => {
       sendResponse(res);
     });
@@ -270,37 +253,28 @@ const classifyCookie = async function (_, feature_input) {
 };
 
 /**
- * Currently this function returns all cookies which aren't necessary.
- * In the future it should return cookies depending on which choices the user selected
- * @param  {Object} cookies     Array of cookies
- * @return {Object} disallowed  Disallowed cookies
+ * This function sets up all the analysis after it received a new cookie.
+ * Right now we assume (due to removal of all cookies prior to a scan) that every cookie arrives here
+ * AFTER a scan is started.
+ * @param cookie  Serialized cookie
  */
-const getWarnings = function (cookies) {
-  let disallowed = [];
-  for (let i in cookies) {
-    if (cookies[i].current_label > 0) {
-      disallowed.push(cookies[i]);
+const analyzeCookie = function (cookie) {
+  chrome.storage.local.get("scan", (res) => {
+    if (!res || !res.scan || !res.scan.inProgress) {
+      return;
     }
-  }
-  return disallowed;
-}
-
-/**
- * Checks if any cookie stores information regarding used CMP and user choices
- * @param cookies               All cookies to check
- * @returns {null|{choices}|*}  Either CMP + choices or CMP or undefined
- */
-const getCMP = function (cookies) {
-  var recentCMP = null;
-  for (let i in cookies) {
-    const cmp = analyzeCMP(cookies[i]);
-    if (cmp != null && cmp.choices != null) {
-      return cmp;
-    } else if (cmp != null) {
-      recentCMP = cmp;
+    // getWarnings
+    if (cookie["current_label"] > 0) {
+      res.scan.warnings.push(cookie);
     }
-  }
-  return recentCMP;
+    // getCMP
+    const cmp = analyzeCMP(cookie);
+    if (cmp && (!res.scan.cmp || !res.scan.cmp.choices)) {
+      console.log("Found CMP: ", cmp);
+      res.scan.cmp = cmp;
+    }
+    chrome.storage.local.set({"scan": res.scan });
+  });
 }
 
 /**
@@ -355,6 +329,7 @@ const getCMP = function (cookies) {
     // }
 
     // If consent is given, store the cookie again.
+    analyzeCookie(serializedCookie);
     insertCookieIntoStorage(serializedCookie);
 }
 

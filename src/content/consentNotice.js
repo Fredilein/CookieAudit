@@ -11,6 +11,12 @@ const _ = setTimeout(async () => {
   consentNotice = await searchOnetrust();
   if (consentNotice) {
     console.log("Onetrust notice:\n", consentNotice);
+    chrome.storage.local.get("scan", (res) => {
+      if (res && res.scan && !res.scan.consentNotice) {
+        res.scan.consentNotice = consentNotice;
+        chrome.storage.local.set({"scan": res.scan });
+      }
+    });
   }
 }, 1000);
 

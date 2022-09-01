@@ -37,7 +37,8 @@ async function startStopScan() {
         'inProgress': true,
         'cmp': null,
         'url': url,
-        'warnings': []
+        'warnings': [],
+        'consentNotice': null
       };
       chrome.storage.local.set({ scan });
 
@@ -141,33 +142,6 @@ const classIndexToString = (idx) => {
 };
 
 /**
- * Retrieve all information (warnings and cmp) from the background script
- * and update the local scan object.
- */
-function updateCookieWarnings() {
-  chrome.runtime.sendMessage("get_analysis", function (analysis) {
-    chrome.storage.local.get("scan", (res) => {
-      for (let i in analysis.warnings) {
-        // add all new warnings to scan object
-        if (!res.scan.warnings.some(e => e.name === analysis.warnings[i].name)){
-          res.scan.warnings.push(analysis.warnings[i]);
-        }
-      }
-      // update CMP if not already in scan object
-      if (analysis.cmp && !res.scan.cmp) {
-        res.scan.cmp = analysis.cmp;
-      }
-      // update CMP choices if not already in scan object
-      if (analysis.cmp && analysis.cmp.choices && !res.scan.cmp.choices) {
-        res.scan.cmp.choices = analysis.cmp.choices;
-      }
-      chrome.storage.local.set({"scan": res.scan });
-      renderScan();
-    });
-  });
-}
-
-/**
  * Display all information collected by the background script during a scan.
  */
 function renderScan() {
@@ -208,12 +182,10 @@ chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.inProgress === true) {
     usageDiv.innerHTML = '';
     setContent();
-    updateCookieWarnings();
-    // showCookieWarnings();
+    renderScan();
     startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
     intervalID = window.setInterval(() => {
-      updateCookieWarnings();
-      // showCookieWarnings();
+      renderScan();
     }, 3000);
   }
 });
