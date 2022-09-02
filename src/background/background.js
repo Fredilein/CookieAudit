@@ -263,15 +263,41 @@ const analyzeCookie = function (cookie) {
     if (!res || !res.scan || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
       return;
     }
-    // getWarnings
-    if (cookie["current_label"] > 0 && !res.scan.warnings.some((c) => c.name === cookie.name)) {
-      res.scan.warnings.push(cookie);
-    }
+
     // getCMP
     const cmp = analyzeCMP(cookie);
-    if (cmp && (!res.scan.cmp || !res.scan.cmp.choices)) {
+    // if (cmp && (!res.scan.cmp || !res.scan.cmp.choices)) {
+    if (cmp && (!res.scan.cmp || cmp.choices)) {
       console.log("Found CMP: ", cmp);
       res.scan.cmp = cmp;
+    }
+
+    // getWarnings
+    if (res.scan.stage === SCANSTAGE[1]) {
+      if (cookie["current_label"] > 0 && !res.scan.nonnecessary.some((c) => c.name === cookie.name)) {
+        res.scan.nonnecessary.push(cookie);
+      }
+    } else if (res.scan.stage === SCANSTAGE[2]){
+      if (!res.scan.consentNotice) {
+        chrome.storage.local.set({"scan": res.scan });
+        return;
+      }
+      if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => c.name === cookie["name"])) {
+        console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
+      } else {
+        let declared = false;
+        for (let cat of Object.keys(res.scan.consentNotice)) {
+          if (res.scan.consentNotice[cat].some((c) => c.name === cookie["name"])) {
+            console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
+            res.scan.wrongcat.push({"cookie": cookie, "consent_label": res.scan.consentNotice[cat]});
+            declared = true;
+          }
+        }
+        if (!declared) {
+          console.log(`Cookie ${cookie["name"]} undeclared`);
+          res.scan.undeclared.push(cookie);
+        }
+      }
     }
     chrome.storage.local.set({"scan": res.scan });
   });

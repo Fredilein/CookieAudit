@@ -109,9 +109,9 @@ function parseCookieDataCookiebot(consentNotice) {
     let cookies = [];
     for (let c of consentNotice[cat]) {
       cookies.push({
-        "Name": c[0],
-        "Host": c[1],
-        "Description": c[2]
+        "name": c[0],
+        "host": c[1],
+        "description": c[2]
       });
     }
     consentNotice[cat] = cookies;
@@ -170,21 +170,17 @@ async function searchOnetrust() {
   const consentJson = await res.json();
   const groups = consentJson["DomainData"]["Groups"];
   let consentNotice = {
-    "Necessary": null,
-    "Functionality": null,
-    "Analytical": null,
-    "Advertising": null,
-    "Uncategorized": null
+    "Necessary": [],
+    "Functionality": [],
+    "Analytical": [],
+    "Advertising": [],
+    "Uncategorized": []
   };
   for (let group of groups) {
     for (let cat of CATEGORIES) {
       const groupName = group["GroupName"].toLowerCase();
       if (KEYWORD_MAPPING[cat].some((keyword) => groupName.includes(keyword))) {
-        if (consentNotice[cat]) {
-          consentNotice[cat] = consentNotice[cat].concat(group["FirstPartyCookies"]);
-        } else {
-          consentNotice[cat] = group["FirstPartyCookies"];
-        }
+        consentNotice[cat] = consentNotice[cat].concat(group["FirstPartyCookies"]);
       }
     }
   }
@@ -200,9 +196,9 @@ function parseCookieDataOnetrust(consentNotice) {
     let cookies = [];
     for (let c of consentNotice[cat]) {
       cookies.push({
-        "Name": c.Name,
-        "Host": c.Host,
-        "Description": (c.description) ? c.description : null
+        "name": c.Name,
+        "host": c.Host,
+        "description": (c.description) ? c.description : null
       });
     }
     consentNotice[cat] = cookies;

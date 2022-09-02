@@ -9,8 +9,8 @@ let usageDiv = document.getElementById("usageinfo");
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
 function deleteCookies() {
-  chrome.runtime.sendMessage("clear_cookies", function (_) {
-    // showCookieResult();
+  chrome.runtime.sendMessage("clear_cookies", function (res) {
+    console.log(res);
   });
 }
 
@@ -39,7 +39,9 @@ async function startStopScan() {
         'stage': SCANSTAGE[1],
         'cmp': null,
         'url': url,
-        'warnings': [],
+        'nonnecessary': [],
+        'wrongcat': [],
+        'undeclared': [],
         'consentNotice': null
       };
       chrome.storage.local.set({ scan });
@@ -68,7 +70,6 @@ function advancedScan() {
     res.scan.stage = SCANSTAGE[2];
     chrome.storage.local.set({"scan": res.scan});
     deleteCookies();
-
 
     setContent(SCANSTAGE[2]);
     renderScan();
@@ -110,7 +111,9 @@ function setContent(stage) {
             <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
           </div>
         </div>
-        <div id="warnings"></div>`;
+        <div id="warnings"></div>
+        <div id="undeclared"></div>
+        <div id="wrongcat"></div>`;
       advancedBtn.hidden = true;
       break;
     case SCANSTAGE[3]:
@@ -140,11 +143,11 @@ function showSummary() {
     // Display warnings
     const summaryWarningsDiv = document.getElementById("summary-warnings");
     summaryWarningsDiv.innerHTML = "";
-    if (res.scan.warnings.length > 0) {
-      for (let i in res.scan.warnings) {
+    if (res.scan.nonnecessary.length > 0) {
+      for (let i in res.scan.nonnecessary) {
         let elWarning = document.createElement("div");
         elWarning.innerHTML = `
-              <p>${res.scan.warnings[i].name} <i>(${classIndexToString(res.scan.warnings[i].current_label)})</i></p>`;
+              <p>${res.scan.nonnecessary[i].name} <i>(${classIndexToString(res.scan.nonnecessary[i].current_label)})</i></p>`;
         summaryWarningsDiv.appendChild(elWarning);
       }
     } else {
@@ -196,12 +199,12 @@ function renderScan() {
     // render warnings
     const warningDiv = document.getElementById("warnings");
     warningDiv.innerHTML = "";
-    for (let i in res.scan.warnings) {
+    for (let i in res.scan.nonnecessary) {
       let elWarning = document.createElement("div");
       elWarning.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
         <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
-        <p class="tip-line"><i>${res.scan.warnings[i].name}</i> was classified as <i>${classIndexToString(res.scan.warnings[i].current_label)}</i></p>
+        <p class="tip-line"><i>${res.scan.nonnecessary[i].name}</i> was classified as <i>${classIndexToString(res.scan.nonnecessary[i].current_label)}</i></p>
       </div>`;
       warningDiv.appendChild(elWarning);
     }
@@ -217,6 +220,32 @@ function renderScan() {
       document.getElementById("scanurl").innerHTML = res.scan.url;
     } else {
       document.getElementById("scanurl").innerHTML = "unknown";
+    }
+
+    if (res.scan.stage === SCANSTAGE[2]) {
+      const undeclaredDiv = document.getElementById("undeclared");
+      undeclaredDiv.innerHTML = "";
+      for (let i in res.scan.undeclared) {
+        let elUndeclared = document.createElement("div");
+        elUndeclared.innerHTML = `
+        <div class="box box-cookies" style="margin-bottom: 5px">
+          <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Undeclared cookie</b></p>
+          <p class="tip-line"><i>${res.scan.undeclared[i].name}</i> is not declared in the consent notice</p>
+        </div>`;
+        undeclaredDiv.appendChild(elUndeclared);
+      }
+
+      const wrongcatDiv = document.getElementById("wrongcat");
+      wrongcatDiv.innerHTML = "";
+      for (let i in res.scan.wrongcat) {
+        let elWrongcat = document.createElement("div");
+        elWrongcat.innerHTML = `
+        <div class="box box-cookies" style="margin-bottom: 5px">
+          <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially wrong cookie category</b></p>
+          <p class="tip-line"><i>${res.scan.wrongcat[i].cookie.name}</i> is classified as ${res.scan.wrongcat[i].cookie.current_label}. ${classIndexToString(res.scan.wrongcat[i].consent_label)} in consent notice</p>
+        </div>`;
+        wrongcatDiv.appendChild(elWrongcat);
+      }
     }
   });
 }
