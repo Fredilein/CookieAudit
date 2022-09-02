@@ -14,9 +14,25 @@ Currently CookieAudit is only available for chrome:
 
 - [Chrome extension](https://chrome.google.com/webstore/detail/cookieaudit/hoheefgkoickpgelfgijnjnifcpkmbnc)
 
-## Roadmap
+## How to use this extension
 
-- [ ] Check for cookies not declared in the consent notice
-- [ ] Check if all declared cookies are classified
-- [ ] Check if retention period for all cookies is set correctly
-- [ ] Clean and exportable report
+1. Close all tabs (opening up a private browsing window could also help)
+2. Open up the URL you want to scan
+3. Accept necessary cookies only and browse the website. Explore as many subpages and functionality as possible to increase the scan accuracy.
+The extension lists all cookies which were set by the website but weren't classified as necessary.
+4. (Optional) If the extension was able to read the consent notice (currently only Cookiebot and Onetrust are supported) you can start an advanced scan. Navigate around the website for a second time.
+The extension will additionally list undeclared cookies (not present in the consent notice) as well as cookies it classified differently compared to the consent notice.
+5. End the scan
+The extension will present you with a printable report listing all findings. **This will be implemented soon**.
+
+## Repository contents
+
+- `mockup/` contains just an early version on how the extension might look
+- `src/` source code for the CookieAudit extension
+    - `assets/` contains bootstrap css+js and fontawesome icons used in the popup
+    - `background/` does cookie classification and analysis
+    - `content/` is injected into the user page, searches for the consent notice
+    - `ext_data/` all external data required to perform the feature extraction and class label prediction
+    - `modules/`
+        - `cmp.js` tries to detect user submitted cookie preferences. Cookiebot and Onetrust is currently supported.
+    - `popup/` contains all code for the UI and handles all state of the scan.
