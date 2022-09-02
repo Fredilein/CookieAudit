@@ -52,3 +52,11 @@ body {
   right: 10px;
   top: 6px;
 }
+
+.analysis-accordion {
+  margin-bottom: 10px;
+}
+
+.count-pill {
+  margin-left: 5px;
+}

@@ -84,8 +84,11 @@ function setContent(stage) {
   switch (stage) {
     case SCANSTAGE[1]:
       contentDiv.innerHTML = `
-        <p class="text-center">Auditing <i id="scanurl">...</i></p>
         <div class="box box-cmp">
+          <div class="d-flex justify-content-between">
+            <div><b>URL</b></div>
+            <div id="scanurl"><i>Unknown</i></div>
+          </div>
           <div class="d-flex justify-content-between">
             <div><b>CMP</b></div>
             <div id="cmpdiv"><i>Unknown</i></div>
@@ -95,13 +98,29 @@ function setContent(stage) {
             <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
           </div>
         </div>
-        <div id="warnings"></div>`;
+        <div class="accordion analysis-accordion" id="accordionExample">
+          <div class="accordion-item" id="warnings" hidden>
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+              <div class="accordion-body" id="warnings-body">
+                No warnings
+              </div>
+            </div>
+          </div>
+        </div>`;
       advancedBtn.hidden = false;
       break;
     case SCANSTAGE[2]:
       contentDiv.innerHTML = `
-        <p class="text-center">Auditing <i id="scanurl">...</i></p>
         <div class="box box-cmp">
+          <div class="d-flex justify-content-between">
+            <div><b>URL</b></div>
+            <div id="scanurl"><i>Unknown</i></div>
+          </div>
           <div class="d-flex justify-content-between">
             <div><b>CMP</b></div>
             <div id="cmpdiv"><i>Unknown</i></div>
@@ -111,9 +130,45 @@ function setContent(stage) {
             <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
           </div>
         </div>
-        <div id="warnings"></div>
-        <div id="undeclared"></div>
-        <div id="wrongcat"></div>`;
+ 
+        <div class="accordion analysis-accordion" id="accordionExample">
+          <div class="accordion-item" id="warnings" hidden>
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+              <div class="accordion-body" id="warnings-body">
+                No warnings
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item" id="undeclared" hidden>
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Undeclared cookies <span class="badge bg-primary rounded-pill count-pill" id="undeclared-pill">0</span>
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+              <div class="accordion-body" id="undeclared-body">
+                No undeclared cookies
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item" id="wrongcat" hidden>
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Wrongly categorized cookies <span class="badge bg-primary rounded-pill count-pill" id="wrongcat-pill">0</span>
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+              <div class="accordion-body" id="wrongcat-body">
+                No wrongly categorized cookies
+              </div>
+            </div>
+          </div>
+        </div>`;
       advancedBtn.hidden = true;
       break;
     case SCANSTAGE[3]:
@@ -197,8 +252,12 @@ const classIndexToString = (idx) => {
 function renderScan() {
   chrome.storage.local.get("scan", (res) => {
     // render warnings
-    const warningDiv = document.getElementById("warnings");
+    const warningDiv = document.getElementById("warnings-body");
     warningDiv.innerHTML = "";
+    if (res.scan.nonnecessary.length > 0) {
+      document.getElementById("warnings").hidden = false;
+      document.getElementById("warnings-pill").innerText = res.scan.nonnecessary.length;
+    }
     for (let i in res.scan.nonnecessary) {
       let elWarning = document.createElement("div");
       elWarning.innerHTML = `
@@ -223,8 +282,12 @@ function renderScan() {
     }
 
     if (res.scan.stage === SCANSTAGE[2]) {
-      const undeclaredDiv = document.getElementById("undeclared");
+      const undeclaredDiv = document.getElementById("undeclared-body");
       undeclaredDiv.innerHTML = "";
+      if (res.scan.undeclared.length > 0) {
+        document.getElementById("undeclared").hidden = false;
+        document.getElementById("undeclared-pill").innerText = res.scan.undeclared.length;
+      }
       for (let i in res.scan.undeclared) {
         let elUndeclared = document.createElement("div");
         elUndeclared.innerHTML = `
@@ -235,8 +298,12 @@ function renderScan() {
         undeclaredDiv.appendChild(elUndeclared);
       }
 
-      const wrongcatDiv = document.getElementById("wrongcat");
+      const wrongcatDiv = document.getElementById("wrongcat-body");
       wrongcatDiv.innerHTML = "";
+      if (res.scan.wrongcat.length > 0) {
+        document.getElementById("wrongcat").hidden = false;
+        document.getElementById("wrongcat-pill").innerText = res.scan.wrongcat.length;
+      }
       for (let i in res.scan.wrongcat) {
         let elWrongcat = document.createElement("div");
         elWrongcat.innerHTML = `
