@@ -3,6 +3,7 @@ let cmpDiv = document.getElementById("cmp");
 let cookieTable = document.getElementById("cookieTableBody");
 let contentDiv = document.getElementById("content");
 let startStopBtn = document.getElementById("startStopScan");
+let advancedBtn = document.getElementById("advancedScan");
 let usageDiv = document.getElementById("usageinfo");
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
@@ -26,7 +27,6 @@ async function getURL() {
 
 /**
  * Handles setup of a scan as well as everything after the scan.
- * TODO: Split into multiple functions for less confusion
  * @returns {Promise<void>}
  */
 async function startStopScan() {
@@ -45,7 +45,7 @@ async function startStopScan() {
       chrome.storage.local.set({ scan });
 
       startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
-      setContent();
+      setContent(SCANSTAGE[1]);
 
       // TODO: Not sure if good UX but fixes the update problem for now
       window.close();
@@ -54,8 +54,24 @@ async function startStopScan() {
       res.scan.stage = SCANSTAGE[3];
       chrome.storage.local.set({"scan": res.scan});
       clearInterval(intervalID);
-      showSummary();
+      setContent(SCANSTAGE[3]);
     }
+  });
+}
+
+function advancedScan() {
+  chrome.storage.local.get("scan", (res) => {
+    if (!res || !res.scan || !res.scan.stage || res.scan.stage !== SCANSTAGE[1]) {
+      console.log("Can start advanced scan from this stage");
+    }
+    console.log("Starting advanced scan");
+    res.scan.stage = SCANSTAGE[2];
+    chrome.storage.local.set({"scan": res.scan});
+    deleteCookies();
+
+
+    setContent(SCANSTAGE[2]);
+    renderScan();
   });
 }
 
@@ -63,20 +79,45 @@ async function startStopScan() {
  * Sets the basic html strcture of the extension during a scan.
  * The content of these divs is changed upon receiving information while scanning.
  */
-function setContent() {
-  contentDiv.innerHTML = `
-      <p class="text-center">Auditing <i id="scanurl">...</i></p>
-      <div class="box box-cmp">
-        <div class="d-flex justify-content-between">
-          <div><b>CMP</b></div>
-          <div id="cmpdiv"><i>Unknown</i></div>
+function setContent(stage) {
+  switch (stage) {
+    case SCANSTAGE[1]:
+      contentDiv.innerHTML = `
+        <p class="text-center">Auditing <i id="scanurl">...</i></p>
+        <div class="box box-cmp">
+          <div class="d-flex justify-content-between">
+            <div><b>CMP</b></div>
+            <div id="cmpdiv"><i>Unknown</i></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Consent given</b></div>
+            <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
+          </div>
         </div>
-        <div class="d-flex justify-content-between">
-          <div><b>Consent given</b></div>
-          <div id="choicesdiv"><i>Unknown (assume neccessary)</i></div>
+        <div id="warnings"></div>`;
+      advancedBtn.hidden = false;
+      break;
+    case SCANSTAGE[2]:
+      contentDiv.innerHTML = `
+        <p class="text-center">Auditing <i id="scanurl">...</i></p>
+        <div class="box box-cmp">
+          <div class="d-flex justify-content-between">
+            <div><b>CMP</b></div>
+            <div id="cmpdiv"><i>Unknown</i></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Consent given</b></div>
+            <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
+          </div>
         </div>
-      </div>
-  <div id="warnings"></div>`;
+        <div id="warnings"></div>`;
+      advancedBtn.hidden = true;
+      break;
+    case SCANSTAGE[3]:
+      advancedBtn.hidden = true;
+      showSummary();
+      break;
+  }
 }
 
 function showSummary() {
@@ -114,7 +155,7 @@ function showSummary() {
       document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
     }
     // Display url
-    if (res.scan.cmp) {
+    if (res.scan.url) {
       document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
     }
     startStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Scan';
@@ -185,7 +226,7 @@ var intervalID;
 chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
     usageDiv.innerHTML = '';
-    setContent();
+    setContent(res.scan.stage);
     renderScan();
     startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
     intervalID = window.setInterval(() => {
@@ -198,5 +239,8 @@ chrome.storage.local.get("scan", (res) => {
 document.addEventListener("DOMContentLoaded", function () {
   startStopBtn.addEventListener("click", function () {
     startStopScan();
+  });
+  advancedBtn.addEventListener("click", function () {
+    advancedScan();
   });
 });
