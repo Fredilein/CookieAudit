@@ -231,6 +231,22 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     clearCookies().then((res) => {
       sendResponse(res);
     });
+  } else if (request === "start_scan") {
+    if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
+      chrome.cookies.onChanged.addListener(cookieListener).then((res) => {
+        sendResponse(res);
+      });
+    } else {
+      sendResponse("already has listener");
+    }
+  } else if (request === "stop_scan") {
+    if (chrome.cookies.onChanged.hasListener(cookieListener)) {
+      chrome.cookies.onChanged.removeListener(cookieListener).then((res) => {
+        sendResponse(res);
+      });
+    } else {
+      sendResponse("no listener attached");
+    }
   }
   return true; // Need this to avoid 'message port closed' error
 });
@@ -361,11 +377,12 @@ const analyzeCookie = function (cookie) {
 
 /**
  * Listener that is executed any time a cookie is added, updated or removed.
- * Classifies the cookie and rejects it based on user policy.
+ * Classifies the cookie and rejects it based on user policy. Listener is attached/removed from chrome.cookies.onChanged
+ * when a start_scan or stop_scan message is received.
  * @param {Object} changeInfo  Contains the cookie itself, and cause info.
  */
-chrome.cookies.onChanged.addListener((changeInfo) => {
+const cookieListener = function (changeInfo) {
   if (!changeInfo.removed && historyDB) {
     handleCookie(changeInfo.cookie, true, false);
   }
-});
+}

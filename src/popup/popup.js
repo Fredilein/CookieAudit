@@ -46,6 +46,10 @@ async function startStopScan() {
       };
       chrome.storage.local.set({ scan });
 
+      chrome.runtime.sendMessage("start_scan", function (res) {
+        console.log(res);
+      });
+
       startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
       setContent(SCANSTAGE[1]);
 
@@ -55,6 +59,9 @@ async function startStopScan() {
       console.log("Stopping scan...");
       res.scan.stage = SCANSTAGE[3];
       chrome.storage.local.set({"scan": res.scan});
+      chrome.runtime.sendMessage("stop_scan", function (res) {
+        console.log(res);
+      });
       clearInterval(intervalID);
       setContent(SCANSTAGE[3]);
     }
