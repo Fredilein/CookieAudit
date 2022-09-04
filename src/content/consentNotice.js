@@ -3,21 +3,23 @@
 // therefore we wait an additional second.
 // Just waiting for the document to load isn't enough somehow, that's why we wait for an additional second
 const _ = setTimeout(async () => {
-  let consentNotice;
-  consentNotice = await searchCookiebot();
-  if (consentNotice) {
-    console.log("Cookiebot notice:\n", consentNotice);
-  }
-  consentNotice = await searchOnetrust();
-  if (consentNotice) {
-    console.log("Onetrust notice:\n", consentNotice);
-    chrome.storage.local.get("scan", (res) => {
-      if (res && res.scan && !res.scan.consentNotice) {
-        res.scan.consentNotice = consentNotice;
-        chrome.storage.local.set({"scan": res.scan });
-      }
-    });
-  }
+  let found = false;
+  chrome.storage.local.get("scan", async (res) => {
+    if (res && res.scan && res.scan.consentNotice) {
+      return;
+    }
+    let consentNotice;
+    consentNotice = await searchCookiebot();
+    if (consentNotice) {
+      console.log("Cookiebot notice:\n", consentNotice);
+    }
+    consentNotice = await searchOnetrust();
+    if (consentNotice) {
+      console.log("Onetrust notice:\n", consentNotice);
+      res.scan.consentNotice = consentNotice;
+      chrome.storage.local.set({"scan": res.scan });
+    }
+  });
 }, 1000);
 
 const CATEGORIES = ["Necessary", "Functionality", "Analytical", "Advertising", "Uncategorized"];

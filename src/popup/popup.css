@@ -10,8 +10,12 @@ body {
   padding: 10px;
 }
 
-.btn-delcookies {
+.btn {
   width: 100%;
+}
+
+.btn-advanced {
+  margin-bottom: 10px;
 }
 
 .box {

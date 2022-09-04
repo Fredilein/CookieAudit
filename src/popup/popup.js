@@ -4,7 +4,6 @@ let cookieTable = document.getElementById("cookieTableBody");
 let contentDiv = document.getElementById("content");
 let startStopBtn = document.getElementById("startStopScan");
 let advancedBtn = document.getElementById("advancedScan");
-let usageDiv = document.getElementById("usageinfo");
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
@@ -105,14 +104,14 @@ function setContent(stage) {
             <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
           </div>
         </div>
-        <div class="accordion analysis-accordion" id="accordionExample">
-          <div class="accordion-item" id="warnings" hidden>
+        <div class="accordion analysis-accordion" id="accordionWarnings" hidden>
+          <div class="accordion-item" id="warnings">
             <h2 class="accordion-header" id="headingOne">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                 Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
               </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionWarnings">
               <div class="accordion-body" id="warnings-body">
                 No warnings
               </div>
@@ -138,38 +137,42 @@ function setContent(stage) {
           </div>
         </div>
  
-        <div class="accordion analysis-accordion" id="accordionExample">
-          <div class="accordion-item" id="warnings" hidden>
+        <div class="accordion analysis-accordion" id="accordionWarnings" hidden>
+          <div class="accordion-item" id="warnings">
             <h2 class="accordion-header" id="headingOne">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                 Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
               </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionWarnings">
               <div class="accordion-body" id="warnings-body">
                 No warnings
               </div>
             </div>
           </div>
-          <div class="accordion-item" id="undeclared" hidden>
+        </div>
+        <div class="accordion analysis-accordion" id="accordionUndeclared" hidden>
+          <div class="accordion-item" id="undeclared">
             <h2 class="accordion-header" id="headingTwo">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                 Undeclared cookies <span class="badge bg-primary rounded-pill count-pill" id="undeclared-pill">0</span>
               </button>
             </h2>
-            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionUndeclared">
               <div class="accordion-body" id="undeclared-body">
                 No undeclared cookies
               </div>
             </div>
           </div>
-          <div class="accordion-item" id="wrongcat" hidden>
+        </div>
+        <div class="accordion analysis-accordion" id="accordionWrongcat" hidden> 
+          <div class="accordion-item" id="wrongcat">
             <h2 class="accordion-header" id="headingThree">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
                 Wrongly categorized cookies <span class="badge bg-primary rounded-pill count-pill" id="wrongcat-pill">0</span>
               </button>
             </h2>
-            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionWrongcat">
               <div class="accordion-body" id="wrongcat-body">
                 No wrongly categorized cookies
               </div>
@@ -262,7 +265,7 @@ function renderScan() {
     const warningDiv = document.getElementById("warnings-body");
     warningDiv.innerHTML = "";
     if (res.scan.nonnecessary.length > 0) {
-      document.getElementById("warnings").hidden = false;
+      document.getElementById("accordionWarnings").hidden = false;
       document.getElementById("warnings-pill").innerText = res.scan.nonnecessary.length;
     }
     for (let i in res.scan.nonnecessary) {
@@ -292,7 +295,7 @@ function renderScan() {
       const undeclaredDiv = document.getElementById("undeclared-body");
       undeclaredDiv.innerHTML = "";
       if (res.scan.undeclared.length > 0) {
-        document.getElementById("undeclared").hidden = false;
+        document.getElementById("accordionUndeclared").hidden = false;
         document.getElementById("undeclared-pill").innerText = res.scan.undeclared.length;
       }
       for (let i in res.scan.undeclared) {
@@ -308,7 +311,7 @@ function renderScan() {
       const wrongcatDiv = document.getElementById("wrongcat-body");
       wrongcatDiv.innerHTML = "";
       if (res.scan.wrongcat.length > 0) {
-        document.getElementById("wrongcat").hidden = false;
+        document.getElementById("accordionWrongcat").hidden = false;
         document.getElementById("wrongcat-pill").innerText = res.scan.wrongcat.length;
       }
       for (let i in res.scan.wrongcat) {
@@ -328,7 +331,6 @@ function renderScan() {
 var intervalID;
 chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
-    usageDiv.innerHTML = '';
     setContent(res.scan.stage);
     renderScan();
     startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';

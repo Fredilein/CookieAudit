@@ -233,17 +233,15 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     });
   } else if (request === "start_scan") {
     if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
-      chrome.cookies.onChanged.addListener(cookieListener).then((res) => {
-        sendResponse(res);
-      });
+      chrome.cookies.onChanged.addListener(cookieListener);
+      sendResponse("added listener")
     } else {
       sendResponse("already has listener");
     }
   } else if (request === "stop_scan") {
     if (chrome.cookies.onChanged.hasListener(cookieListener)) {
-      chrome.cookies.onChanged.removeListener(cookieListener).then((res) => {
-        sendResponse(res);
-      });
+      chrome.cookies.onChanged.removeListener(cookieListener);
+      sendResponse("removed listener");
     } else {
       sendResponse("no listener attached");
     }
@@ -284,7 +282,6 @@ const analyzeCookie = function (cookie) {
     const cmp = analyzeCMP(cookie);
     // if (cmp && (!res.scan.cmp || !res.scan.cmp.choices)) {
     if (cmp && (!res.scan.cmp || cmp.choices)) {
-      console.log("Found CMP: ", cmp);
       res.scan.cmp = cmp;
     }
 
@@ -299,18 +296,18 @@ const analyzeCookie = function (cookie) {
         return;
       }
       if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => c.name === cookie["name"])) {
-        console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
+        // console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
       } else {
         let declared = false;
         for (let cat of Object.keys(res.scan.consentNotice)) {
           if (res.scan.consentNotice[cat].some((c) => c.name === cookie["name"])) {
-            console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
+            // console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
             res.scan.wrongcat.push({"cookie": cookie, "consent_label": res.scan.consentNotice[cat]});
             declared = true;
           }
         }
         if (!declared) {
-          console.log(`Cookie ${cookie["name"]} undeclared`);
+          // console.log(`Cookie ${cookie["name"]} undeclared`);
           res.scan.undeclared.push(cookie);
         }
       }
