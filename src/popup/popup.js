@@ -1,9 +1,4 @@
-let popup = document.getElementById("popup");
-let cmpDiv = document.getElementById("cmp");
-let cookieTable = document.getElementById("cookieTableBody");
 let contentDiv = document.getElementById("content");
-let startStopBtn = document.getElementById("startStopScan");
-let advancedBtn = document.getElementById("advancedScan");
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
@@ -28,7 +23,7 @@ async function getURL() {
  * Handles setup of a scan as well as everything after the scan.
  * @returns {Promise<void>}
  */
-async function startStopScan() {
+async function startScan() {
   const url = await getURL();
   chrome.storage.local.get("scan", (res) => {
     if (!res || !res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
@@ -49,11 +44,20 @@ async function startStopScan() {
         console.log(res);
       });
 
-      startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
       setContent(SCANSTAGE[1]);
 
       // TODO: Not sure if good UX but fixes the update problem for now
       window.close();
+    } else {
+      console.error("Can't start scan.");
+    }
+  });
+}
+
+function stopScan() {
+  chrome.storage.local.get("scan", (res) => {
+    if (!res || !res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
+      console.error("No scan in progress");
     } else {
       console.log("Stopping scan...");
       res.scan.stage = SCANSTAGE[3];
@@ -63,6 +67,7 @@ async function startStopScan() {
       });
       clearInterval(intervalID);
       setContent(SCANSTAGE[3]);
+      renderSummary();
     }
   });
 }
@@ -88,6 +93,21 @@ function advancedScan() {
  */
 function setContent(stage) {
   switch (stage) {
+    case SCANSTAGE[0]:
+      contentDiv.innerHTML = `
+        <ul>
+          <li>When you start a scan, <strong>all cookies are deleted</strong></li>
+          <li>Make sure to close all other tabs before starting a scan</li>
+          <li>During the scan, navigate around the site</li>
+          <li>Don't open any other website while scanning</li>
+          <li>This is still an early version of the extension! It might not work properly</li>
+        </ul> 
+        <button id="startScan" class="btn btn-success"><i class="fa-solid fa-play"></i> Start Scan</button>
+      `;
+      document.getElementById("startScan").addEventListener("click", function () {
+        startScan();
+      });
+      break;
     case SCANSTAGE[1]:
       contentDiv.innerHTML = `
         <div class="box box-cmp">
@@ -117,8 +137,15 @@ function setContent(stage) {
               </div>
             </div>
           </div>
-        </div>`;
-      advancedBtn.hidden = false;
+        </div>
+        <button id="advancedScan" class="btn btn-outline-success btn-sm btn-advanced">Check all cookies</button>
+        <button id="stopScan" class="btn btn-success"><i class="fa-solid fa-stop"></i> Stop Scan</button>`;
+      document.getElementById("advancedScan").addEventListener("click", function () {
+        advancedScan();
+      });
+      document.getElementById("stopScan").addEventListener("click", function () {
+        stopScan();
+      });
       break;
     case SCANSTAGE[2]:
       contentDiv.innerHTML = `
@@ -178,19 +205,14 @@ function setContent(stage) {
               </div>
             </div>
           </div>
-        </div>`;
-      advancedBtn.hidden = true;
+        </div>
+        <button id="stopScan" class="btn btn-success"><i class="fa-solid fa-stop"></i> Stop Scan</button>`;
+      document.getElementById("stopScan").addEventListener("click", function () {
+        stopScan();
+      });
       break;
     case SCANSTAGE[3]:
-      advancedBtn.hidden = true;
-      showSummary();
-      break;
-  }
-}
-
-function showSummary() {
-  chrome.storage.local.get("scan", (res) => {
-    contentDiv.innerHTML = `
+      contentDiv.innerHTML = `
         <div id="summary">
           <div id="summary-url"></div>
           <h4>CMP</h4>
@@ -205,29 +227,8 @@ function showSummary() {
             Info on how to fix this will be here soon.
           </div>
         </div>`;
-    // Display warnings
-    const summaryWarningsDiv = document.getElementById("summary-warnings");
-    summaryWarningsDiv.innerHTML = "";
-    if (res.scan.nonnecessary.length > 0) {
-      for (let i in res.scan.nonnecessary) {
-        let elWarning = document.createElement("div");
-        elWarning.innerHTML = `
-              <p>${res.scan.nonnecessary[i].name} <i>(${classIndexToString(res.scan.nonnecessary[i].current_label)})</i></p>`;
-        summaryWarningsDiv.appendChild(elWarning);
-      }
-    } else {
-      summaryWarningsDiv.innerHTML = "No cookie violations detected";
-    }
-    // Display cmp info
-    if (res.scan.cmp) {
-      document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
-    }
-    // Display url
-    if (res.scan.url) {
-      document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
-    }
-    startStopBtn.innerHTML = '<i class="fa-solid fa-play"></i> Start Scan';
-  });
+      break;
+  }
 }
 
 /**
@@ -291,7 +292,9 @@ function renderScan() {
       document.getElementById("scanurl").innerHTML = "unknown";
     }
 
+    // advanced scan
     if (res.scan.stage === SCANSTAGE[2]) {
+      // render undeclared
       const undeclaredDiv = document.getElementById("undeclared-body");
       undeclaredDiv.innerHTML = "";
       if (res.scan.undeclared.length > 0) {
@@ -308,6 +311,7 @@ function renderScan() {
         undeclaredDiv.appendChild(elUndeclared);
       }
 
+      // render wrong category
       const wrongcatDiv = document.getElementById("wrongcat-body");
       wrongcatDiv.innerHTML = "";
       if (res.scan.wrongcat.length > 0) {
@@ -327,25 +331,42 @@ function renderScan() {
   });
 }
 
+function renderSummary() {
+  chrome.storage.local.get("scan", (res) => {
+    // Display warnings
+    const summaryWarningsDiv = document.getElementById("summary-warnings");
+    summaryWarningsDiv.innerHTML = "";
+    if (res.scan.nonnecessary.length > 0) {
+      for (let i in res.scan.nonnecessary) {
+        let elWarning = document.createElement("div");
+        elWarning.innerHTML = `
+              <p>${res.scan.nonnecessary[i].name} <i>(${classIndexToString(res.scan.nonnecessary[i].current_label)})</i></p>`;
+        summaryWarningsDiv.appendChild(elWarning);
+      }
+    } else {
+      summaryWarningsDiv.innerHTML = "No cookie violations detected";
+    }
+    // Display cmp info
+    if (res.scan.cmp) {
+      document.getElementById("summary-cmp").innerHTML = res.scan.cmp.name;
+    }
+    // Display url
+    if (res.scan.url) {
+      document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
+    }
+  });
+}
+
 // Setup extension DOM
 var intervalID;
 chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
     setContent(res.scan.stage);
     renderScan();
-    startStopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Scan';
     intervalID = window.setInterval(() => {
       renderScan();
-    }, 3000);
+    }, 2000);
+  } else {
+    setContent(SCANSTAGE[0]);
   }
-});
-
-// onclick events are not allowed, therefore we have to addEventListener to buttons.
-document.addEventListener("DOMContentLoaded", function () {
-  startStopBtn.addEventListener("click", function () {
-    startStopScan();
-  });
-  advancedBtn.addEventListener("click", function () {
-    advancedScan();
-  });
 });

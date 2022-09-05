@@ -3,7 +3,7 @@ html {
 }
 
 body {
-    min-width: 400px;
+    width: 400px;
 }
 
 .padded {
@@ -63,4 +63,15 @@ body {
 
 .count-pill {
   margin-left: 5px;
+}
+
+.logo {
+  background: #F2F5F7;
+  font-family: Inter-Light;
+  font-size: 45px;
+  color: #2B323B;
+  letter-spacing: 0;
+  height: 91px;
+  line-height: 91px;
+  text-align: center;
 }
