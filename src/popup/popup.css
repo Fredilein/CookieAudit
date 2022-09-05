@@ -6,25 +6,76 @@ body {
     width: 400px;
 }
 
-.padded {
-  padding: 10px;
+#content {
+  background-color: white;
 }
 
-.btn {
+.section-start {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.section-tips {
+  background: #FFFFFF;
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.20);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.section-disclaimer {
+  font-family: Inter-Medium;
+  font-size: 12px;
+  color: #959BA6;
+  letter-spacing: 0;
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.section-buttons {
+  margin-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.btn-main {
   width: 100%;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  border-radius: 24px;
+  box-shadow: 1px 2px 8px 0 rgba(0,0,0,0.10);
+  border-width: 0px;
+}
+
+.btn-start {
+  background-color: #2473E7;
+}
+
+.btn-stop {
+  background-color: #FA1A55;
+  margin-top: 5px;
+  margin-bottom: 20px;
 }
 
 .btn-advanced {
+  margin-top: 0px;
   margin-bottom: 10px;
+  background-color: #F2D024;
+  color: white;
 }
+
+.btn-advanced:hover {
+   color: white;
+ }
 
 .box {
+  margin: 20px;
   padding: 10px;
-  margin-bottom: 15px;
-}
-
-.box-cmp {
-  background-color: #f8f9fa;
+  background: #F2F5F7;
+  box-shadow: 1px 2px 8px 0 rgba(0,0,0,0.10);
+  border-radius: 8px;
 }
 
 .box-cookies {
@@ -32,11 +83,6 @@ body {
   padding-bottom: 8px;
   background-color: #f1aeb5;
   border-left: #e35d6a 3px solid;
-}
-
-.btn-endscan {
-  width: 100%;
-  margin-top: 15px;
 }
 
 .title-line {
@@ -51,27 +97,53 @@ body {
   margin-bottom: 0px;
 }
 
-.btn-settings {
-  position: absolute;
-  right: 10px;
-  top: 6px;
-}
-
 .analysis-accordion {
   margin-bottom: 10px;
 }
 
 .count-pill {
-  margin-left: 5px;
+  margin-right: 5px;
+  background-color: #FA1A55;
+}
+
+.count-pill-nonnecessary {
+  background-color: #959BA6;
 }
 
 .logo {
-  background: #F2F5F7;
+  background: #f2f5f7;
   font-family: Inter-Light;
   font-size: 45px;
-  color: #2B323B;
+  color: #2b323b;
   letter-spacing: 0;
   height: 91px;
   line-height: 91px;
   text-align: center;
+}
+
+.header-tips {
+  font-family: Inter-Medium;
+  font-size: 25px;
+  color: #2B323B;
+  letter-spacing: 0;
+}
+
+.ul-tips {
+  padding-left: 20px;
+}
+
+li {
+  line-height: 1.6;
+}
+
+.fa-lightbulb {
+  color: #F2D024;
+}
+
+.accordion-body {
+  padding: 0px;
+}
+
+.accordion-nonnecessary {
+  color: #959BA6;
 }

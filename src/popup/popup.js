@@ -95,22 +95,31 @@ function setContent(stage) {
   switch (stage) {
     case SCANSTAGE[0]:
       contentDiv.innerHTML = `
-        <ul>
-          <li>When you start a scan, <strong>all cookies are deleted</strong></li>
-          <li>Make sure to close all other tabs before starting a scan</li>
-          <li>During the scan, navigate around the site</li>
-          <li>Don't open any other website while scanning</li>
-          <li>This is still an early version of the extension! It might not work properly</li>
-        </ul> 
-        <button id="startScan" class="btn btn-success"><i class="fa-solid fa-play"></i> Start Scan</button>
+        <div class="section-start">
+          <button id="startScan" class="btn btn-primary btn-main btn-start"><i class="fa-solid fa-play"></i> Start Scan</button>
+        </div>
+        <div class="section-tips">
+          <div class="header-tips">
+            <i class="fa-regular fa-lightbulb"></i> Tips
+          </div>
+          <ul class="ul-tips">
+              <li>Close all tabs before starting a scan</li>
+              <li>Don't open any other website</li>
+              <li>All your cookies will be deleted!</li>
+            </ul>   
+        </div>
+        <div class="section-disclaimer">
+            This extension is still under developement. It contains bugs!
+        </div>
       `;
+      document.getElementById("content").style.backgroundColor = '#f2f5f7';
       document.getElementById("startScan").addEventListener("click", function () {
         startScan();
       });
       break;
     case SCANSTAGE[1]:
       contentDiv.innerHTML = `
-        <div class="box box-cmp">
+        <div class="box">
           <div class="d-flex justify-content-between">
             <div><b>URL</b></div>
             <div id="scanurl"><i>Unknown</i></div>
@@ -120,15 +129,15 @@ function setContent(stage) {
             <div id="cmpdiv"><i>Unknown</i></div>
           </div>
           <div class="d-flex justify-content-between">
-            <div><b>Consent given</b></div>
-            <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
+            <div><b>Choices</b></div>
+            <div id="choicesdiv"><i>Unknown</i></div>
           </div>
         </div>
-        <div class="accordion analysis-accordion" id="accordionWarnings" hidden>
+        <div class="accordion accordion-flush analysis-accordion" id="accordionWarnings">
           <div class="accordion-item" id="warnings">
             <h2 class="accordion-header" id="headingOne">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
+                <span class="badge rounded-pill count-pill" id="warnings-pill">0</span> Non-necessary cookies
               </button>
             </h2>
             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionWarnings">
@@ -138,8 +147,10 @@ function setContent(stage) {
             </div>
           </div>
         </div>
-        <button id="advancedScan" class="btn btn-outline-success btn-sm btn-advanced">Check all cookies</button>
-        <button id="stopScan" class="btn btn-success"><i class="fa-solid fa-stop"></i> Stop Scan</button>`;
+        <div class="section-buttons">
+          <button id="advancedScan" class="btn btn-warning btn-main btn-sm btn-advanced"><i class="fa-solid fa-binoculars"></i> Advanced Scan</button>
+          <button id="stopScan" class="btn btn-danger btn-main btn-stop"><i class="fa-solid fa-stop"></i> Stop Scan</button>
+        </div>`;
       document.getElementById("advancedScan").addEventListener("click", function () {
         advancedScan();
       });
@@ -149,7 +160,7 @@ function setContent(stage) {
       break;
     case SCANSTAGE[2]:
       contentDiv.innerHTML = `
-        <div class="box box-cmp">
+        <div class="box">
           <div class="d-flex justify-content-between">
             <div><b>URL</b></div>
             <div id="scanurl"><i>Unknown</i></div>
@@ -159,16 +170,16 @@ function setContent(stage) {
             <div id="cmpdiv"><i>Unknown</i></div>
           </div>
           <div class="d-flex justify-content-between">
-            <div><b>Consent given</b></div>
-            <div id="choicesdiv"><i>Unknown (assume necessary)</i></div>
+            <div><b>Choices</b></div>
+            <div id="choicesdiv"><i>Unknown</i></div>
           </div>
         </div>
  
-        <div class="accordion analysis-accordion" id="accordionWarnings" hidden>
+        <div class="accordion accordion-flush analysis-accordion" id="accordionWarnings">
           <div class="accordion-item" id="warnings">
             <h2 class="accordion-header" id="headingOne">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                Non-necessary cookies <span class="badge bg-primary rounded-pill count-pill" id="warnings-pill">0</span>
+              <button class="accordion-button collapsed accordion-nonnecessary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                <span class="badge rounded-pill count-pill count-pill-nonnecessary" id="warnings-pill">0</span> Non-necessary cookies
               </button>
             </h2>
             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionWarnings">
@@ -178,11 +189,11 @@ function setContent(stage) {
             </div>
           </div>
         </div>
-        <div class="accordion analysis-accordion" id="accordionUndeclared" hidden>
+        <div class="accordion accordion-flush analysis-accordion" id="accordionUndeclared">
           <div class="accordion-item" id="undeclared">
             <h2 class="accordion-header" id="headingTwo">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                Undeclared cookies <span class="badge bg-primary rounded-pill count-pill" id="undeclared-pill">0</span>
+                <span class="badge rounded-pill count-pill" id="undeclared-pill">0</span> Undeclared cookies
               </button>
             </h2>
             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionUndeclared">
@@ -192,11 +203,11 @@ function setContent(stage) {
             </div>
           </div>
         </div>
-        <div class="accordion analysis-accordion" id="accordionWrongcat" hidden> 
+        <div class="accordion accordion-flush analysis-accordion" id="accordionWrongcat"> 
           <div class="accordion-item" id="wrongcat">
             <h2 class="accordion-header" id="headingThree">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                Wrongly categorized cookies <span class="badge bg-primary rounded-pill count-pill" id="wrongcat-pill">0</span>
+                <span class="badge rounded-pill count-pill" id="wrongcat-pill">0</span> Wrongly categorized cookies
               </button>
             </h2>
             <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionWrongcat">
@@ -206,7 +217,9 @@ function setContent(stage) {
             </div>
           </div>
         </div>
-        <button id="stopScan" class="btn btn-success"><i class="fa-solid fa-stop"></i> Stop Scan</button>`;
+        <div class="section-buttons">
+          <button id="stopScan" class="btn btn-danger btn-main btn-stop"><i class="fa-solid fa-stop"></i> Stop Scan</button>
+        </div>`;
       document.getElementById("stopScan").addEventListener("click", function () {
         stopScan();
       });
@@ -266,15 +279,15 @@ function renderScan() {
     const warningDiv = document.getElementById("warnings-body");
     warningDiv.innerHTML = "";
     if (res.scan.nonnecessary.length > 0) {
-      document.getElementById("accordionWarnings").hidden = false;
       document.getElementById("warnings-pill").innerText = res.scan.nonnecessary.length;
     }
     for (let i in res.scan.nonnecessary) {
       let elWarning = document.createElement("div");
       elWarning.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
-        <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially disallowed cookie</b></p>
-        <p class="tip-line"><i>${res.scan.nonnecessary[i].name}</i> was classified as <i>${classIndexToString(res.scan.nonnecessary[i].current_label)}</i></p>
+        <p class="title-line tip-line"><b>${res.scan.nonnecessary[i].name}</b></p>
+        <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.nonnecessary[i].domain}</p>
+        <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.nonnecessary[i].current_label)}</p>
       </div>`;
       warningDiv.appendChild(elWarning);
     }
@@ -282,7 +295,11 @@ function renderScan() {
     if (res.scan.cmp) {
       document.getElementById("cmpdiv").innerHTML = res.scan.cmp.name;
       if (res.scan.cmp.choices) {
-        document.getElementById("choicesdiv").innerHTML = res.scan.cmp.choices;
+        if (res.scan.cmp.choices.length > 3) {
+          document.getElementById("choicesdiv").innerHTML = "All";
+        } else {
+          document.getElementById("choicesdiv").innerHTML = res.scan.cmp.choices;
+        }
       }
     }
     // render url
@@ -298,15 +315,15 @@ function renderScan() {
       const undeclaredDiv = document.getElementById("undeclared-body");
       undeclaredDiv.innerHTML = "";
       if (res.scan.undeclared.length > 0) {
-        document.getElementById("accordionUndeclared").hidden = false;
         document.getElementById("undeclared-pill").innerText = res.scan.undeclared.length;
       }
       for (let i in res.scan.undeclared) {
         let elUndeclared = document.createElement("div");
         elUndeclared.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
-          <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Undeclared cookie</b></p>
-          <p class="tip-line"><i>${res.scan.undeclared[i].name}</i> is not declared in the consent notice</p>
+          <p class="title-line tip-line"><b>${res.scan.undeclared[i].name}</b></p>
+          <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.undeclared[i].domain}</p>
+          <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.undeclared[i].current_label)}</p>
         </div>`;
         undeclaredDiv.appendChild(elUndeclared);
       }
@@ -315,15 +332,15 @@ function renderScan() {
       const wrongcatDiv = document.getElementById("wrongcat-body");
       wrongcatDiv.innerHTML = "";
       if (res.scan.wrongcat.length > 0) {
-        document.getElementById("accordionWrongcat").hidden = false;
         document.getElementById("wrongcat-pill").innerText = res.scan.wrongcat.length;
       }
       for (let i in res.scan.wrongcat) {
         let elWrongcat = document.createElement("div");
         elWrongcat.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
-          <p class=" title-line tip-line"><i class="fa-solid fa-circle-exclamation"></i> <b>Potentially wrong cookie category</b></p>
-          <p class="tip-line"><i>${res.scan.wrongcat[i].cookie.name}</i> is classified as ${res.scan.wrongcat[i].cookie.current_label}. ${classIndexToString(res.scan.wrongcat[i].consent_label)} in consent notice</p>
+          <p class="title-line tip-line"><b>${res.scan.wrongcat[i].cookie.name}</b></p>
+          <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongcat[i].cookie.domain}</p>
+          <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)}<i>but declared as ${classIndexToString(res.scan.wrongcat[i].consent_label)}</i></p>
         </div>`;
         wrongcatDiv.appendChild(elWrongcat);
       }
