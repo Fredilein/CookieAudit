@@ -14,6 +14,17 @@ Currently CookieAudit is only available for chrome:
 
 - [Chrome extension](https://chrome.google.com/webstore/detail/cookieaudit/hoheefgkoickpgelfgijnjnifcpkmbnc)
 
+## Build locally
+
+Instead of downloading the extension from the chrome extension store you can also build it locally. To do so follow these steps:
+
+1. Clone this repository
+2. Open Chrome and go to  `Window > Extensions`
+3. Enable `Developer mode` on the top right
+4. Click `Load unpacked`
+5. Go to the cloned repository folder and select the folder `src/`
+6. The CookieAudit extension should now be in the extensions bar of your Chrome browser
+
 ## How to use this extension
 
 1. Close all tabs (opening up a private browsing window could also help)
