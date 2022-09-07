@@ -529,7 +529,7 @@ function renderSummary() {
 // Setup extension DOM
 var intervalID;
 chrome.storage.local.get("scan", (res) => {
-  if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
+  if (res.scan && (res.scan.stage && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2])) {
     setContent(res.scan.stage);
     renderScan();
     intervalID = window.setInterval(() => {

@@ -186,7 +186,7 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     }
   } else if (request === "stop_scan") {
     if (chrome.cookies.onChanged.hasListener(cookieListener)) {
-      chrome.cookies.onChanged.removeListener(cookieListener);
+      // chrome.cookies.onChanged.removeListener(cookieListener);
       sendResponse("removed listener");
     } else {
       sendResponse("no listener attached");
@@ -355,3 +355,5 @@ const cookieListener = function (changeInfo) {
     handleCookie(changeInfo.cookie, true, false);
   }
 }
+
+chrome.cookies.onChanged.addListener(cookieListener);
