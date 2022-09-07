@@ -81,8 +81,19 @@ body {
 .box-cookies {
   padding-top: 8px;
   padding-bottom: 8px;
-  background-color: #f1aeb5;
-  border-left: #e35d6a 3px solid;
+  border-left: #FA1A55 3px solid;
+  background: rgba(250,26,85,0.20);
+}
+
+.box-warnings-summary {
+  background-color: white;
+  box-shadow: none;
+  border-radius: 0px;
+  border-left: #2B323B 3px solid;
+}
+
+.box-summary {
+  margin: 20px;
 }
 
 .title-line {
@@ -146,4 +157,19 @@ li {
 
 .accordion-nonnecessary {
   color: #959BA6;
+}
+
+.display-5 {
+  margin-left: 20px;
+  margin-right: 20px;
+  color: #2B323B;
+}
+
+.display-top {
+  margin-top: 20px;
+}
+
+.summary-p {
+  margin-left: 20px;
+  margin-right: 20px;
 }

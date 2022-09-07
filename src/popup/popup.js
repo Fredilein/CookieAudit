@@ -36,7 +36,8 @@ async function startScan() {
         'nonnecessary': [],
         'wrongcat': [],
         'undeclared': [],
-        'consentNotice': null
+        'consentNotice': null,
+        'advanced': false
       };
       chrome.storage.local.set({ scan });
 
@@ -79,6 +80,7 @@ function advancedScan() {
     }
     console.log("Starting advanced scan");
     res.scan.stage = SCANSTAGE[2];
+    res.scan.advanced = true;
     chrome.storage.local.set({"scan": res.scan});
     deleteCookies();
 
@@ -225,21 +227,74 @@ function setContent(stage) {
       });
       break;
     case SCANSTAGE[3]:
-      contentDiv.innerHTML = `
-        <div id="summary">
-          <div id="summary-url"></div>
-          <h4>CMP</h4>
-          <div id="summary-cmp"></div>
-          <div class="alert alert-info" role="alert">
-            Info on how we rate this CMP will be here soon.
+      // contentDiv.innerHTML = `
+      //   <div id="summary">
+      //     <div id="summary-url"></div>
+      //     <h4>CMP</h4>
+      //     <div id="summary-cmp"></div>
+      //     <div class="alert alert-info" role="alert">
+      //       Info on how we rate this CMP will be here soon.
+      //     </div>
+      //     <br/>
+      //     <h4>Disallowed cookies set</h4>
+      //     <div id="summary-warnings"></div>
+      //     <div class="alert alert-info" role="alert">
+      //       Info on how to fix this will be here soon.
+      //     </div>
+      //   </div>`;
+        contentDiv.innerHTML = `
+          <h1 class="display-5 display-top">Site info</h1>
+          <div class="box-summary">
+            <div class="d-flex justify-content-between">
+              <div><b>URL</b></div>
+              <div id="summary-url"><i>Unknown</i></div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div><b>Audit Type</b></div>
+              <div id="summary-type"><i>Unknown</i></div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div><b>Consent Notice</b></div>
+              <div id="summary-notice"><i>Unknown</i></div>
+            </div>
           </div>
-          <br/>
-          <h4>Disallowed cookies set</h4>
-          <div id="summary-warnings"></div>
-          <div class="alert alert-info" role="alert">
-            Info on how to fix this will be here soon.
+          <div class="box">
+            <p><i class="fa-solid fa-circle-info"></i> Run an advanced scan to check if all cookies are declared in the consent notice.</p>
           </div>
-        </div>`;
+          
+          <h1 class="display-5">CMP</h1>
+          <div class="box-summary">
+            <div class="d-flex justify-content-between">
+              <div><b>CMP</b></div>
+              <div id="summary-cmp"><i>Unknown</i></div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div><b>Choices</b></div>
+              <div id="summary-choices"><i>Unknown</i></div>
+            </div>
+          </div>
+          <div class="box">
+            <p><i class="fa-solid fa-circle-info"></i> We give our opinion on this CMP here soon.</p>
+          </div>
+          
+          <h1 class="display-5">Non-necessary cookies</h1>
+          <div id="summary-nonnecessary"></div>
+          <div class="box">
+            <p><i class="fa-solid fa-circle-info"></i> These cookies were set even though the user hasn't yet chosen to allow all cookies.</p>
+          </div>
+          
+          <h1 class="display-5">Undeclared cookies</h1>
+          <div id="summary-undeclared"></div>
+          <div class="box">
+            <p><i class="fa-solid fa-circle-info"></i> These cookies weren't declared in the consent notice.</p>
+          </div>
+          
+          <h1 class="display-5">Wrongly categorized</h1>
+          <div id="summary-wrongcat"></div>
+          <div class="box">
+            <p><i class="fa-solid fa-circle-info"></i> We classified these cookies differently than what they were declared as in the consent notice.</p>
+          </div>
+`;
       break;
   }
 }
@@ -285,10 +340,10 @@ function renderScan() {
       let elWarning = document.createElement("div");
       elWarning.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
-        <p class="title-line tip-line"><b>${res.scan.nonnecessary[i].name}</b></p>
-        <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.nonnecessary[i].domain}</p>
-        <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.nonnecessary[i].current_label)}</p>
-      </div>`;
+          <p class="title-line tip-line"><b>${res.scan.nonnecessary[i].name}</b></p>
+          <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.nonnecessary[i].domain}</p>
+          <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.nonnecessary[i].current_label)}</p>
+        </div>`;
       warningDiv.appendChild(elWarning);
     }
     // render cmp info
@@ -351,17 +406,21 @@ function renderScan() {
 function renderSummary() {
   chrome.storage.local.get("scan", (res) => {
     // Display warnings
-    const summaryWarningsDiv = document.getElementById("summary-warnings");
+    const summaryWarningsDiv = document.getElementById("summary-nonnecessary");
     summaryWarningsDiv.innerHTML = "";
     if (res.scan.nonnecessary.length > 0) {
       for (let i in res.scan.nonnecessary) {
         let elWarning = document.createElement("div");
         elWarning.innerHTML = `
-              <p>${res.scan.nonnecessary[i].name} <i>(${classIndexToString(res.scan.nonnecessary[i].current_label)})</i></p>`;
+              <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
+                <p class="title-line tip-line"><b>${res.scan.nonnecessary[i].name}</b></p>
+                <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.nonnecessary[i].domain}</p>
+                <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.nonnecessary[i].current_label)}</p>
+              </div>`;
         summaryWarningsDiv.appendChild(elWarning);
       }
     } else {
-      summaryWarningsDiv.innerHTML = "No cookie violations detected";
+      summaryWarningsDiv.innerHTML = "<p class='summary-p'>No cookie violations detected</p>";
     }
     // Display cmp info
     if (res.scan.cmp) {
@@ -369,7 +428,56 @@ function renderSummary() {
     }
     // Display url
     if (res.scan.url) {
-      document.getElementById("summary-url").innerHTML = "<h3>" + res.scan.url + "</h3>";
+      document.getElementById("summary-url").innerHTML = res.scan.url;
+    }
+
+    // Display advanced
+    if (res.scan.advanced) {
+      document.getElementById("summary-type").innerHTML = "Advanced";
+    } else {
+      document.getElementById("summary-type").innerHTML = "Standard";
+    }
+
+    if (res.scan.consentNotice) {
+      document.getElementById("summary-notice").innerHTML = "Found";
+    } else {
+      document.getElementById("summary-notice").innerHTML = "Not found";
+    }
+
+    // Display undeclared
+    const summaryUndeclaredDiv = document.getElementById("summary-undeclared");
+    summaryUndeclaredDiv.innerHTML = "";
+    if (res.scan.undeclared.length > 0) {
+      for (let i in res.scan.undeclared) {
+        let elUndeclared = document.createElement("div");
+        elUndeclared.innerHTML = `
+          <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
+            <p class="title-line tip-line"><b>${res.scan.undeclared[i].name}</b></p>
+            <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.undeclared[i].domain}</p>
+            <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.undeclared[i].current_label)}</p>
+          </div>`;
+        summaryUndeclaredDiv.appendChild(elUndeclared);
+      }
+    } else {
+      summaryUndeclaredDiv.innerHTML = "<p class='summary-p'>No undeclared cookies detected</p>";
+    }
+
+    // Display wrongcat
+    const summaryWrongcatDiv = document.getElementById("summary-wrongcat");
+    summaryWrongcatDiv.innerHTML = "";
+    if (res.scan.wrongcat.length > 0) {
+      for (let i in res.scan.wrongcat) {
+        let elWrongcat = document.createElement("div");
+        elWrongcat.innerHTML = `
+          <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
+            <p class="title-line tip-line"><b>${res.scan.wrongcat[i].cookie.name}</b></p>
+            <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongcat[i].cookie.domain}</p>
+            <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)}<i>but declared as ${classIndexToString(res.scan.wrongcat[i].consent_label)}</i></p>
+          </div>`;
+        summaryWrongcatDiv.appendChild(elWrongcat);
+      }
+    } else {
+      summaryWrongcatDiv.innerHTML = "<p class='summary-p'>No wrongly categorized cookies detected</p>";
     }
   });
 }
