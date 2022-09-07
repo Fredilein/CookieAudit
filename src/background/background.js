@@ -5,39 +5,9 @@ import { analyzeCMP } from "/modules/cmp.js";
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
-var historyDB = undefined;
-const openDBRequest = indexedDB.open("CookieDB", 1);
-
 const UPDATE_LIMIT = 10;
 const MINTIME = 120000;
 // const PAUSE = false;
-
-
-// executed if the database is new or needs to be updated
-openDBRequest.onupgradeneeded = function (event) {
-  let objectStore = event.target.result.createObjectStore("cookies");
-  objectStore.createIndex("name", "name", { unique: false });
-  objectStore.createIndex("domain", "domain", { unique: false });
-  objectStore.createIndex("path", "path", { unique: false });
-  objectStore.createIndex("label", "current_label", { unique: false });
-  console.info("Upgraded the CookieDB.");
-};
-
-// success will be called after upgradeneeded
-openDBRequest.onsuccess = function (ev1) {
-  console.info("Successfully connected to CookieDB.");
-  historyDB = ev1.target.result;
-  historyDB.onerror = function (ev2) {
-    console.error("Database error: " + ev2.target.errorCode);
-  };
-};
-
-// if the connection failed
-openDBRequest.onerror = function (event) {
-  console.error(
-    `Failed to open CookieDB with error code: ${event.target.errorCode}`
-  );
-};
 
 /**
  * Construct a string formatted key that uniquely identifies the given cookie object.
@@ -117,15 +87,18 @@ const updateFEInput = async function(storedFEInput, rawCookie) {
  * @param {Object} serializedCookie Cookie to insert into storage.
  */
 const insertCookieIntoStorage = function(serializedCookie) {
-    if (historyDB !== undefined) {
-        let ckey = constructKeyFromCookie(serializedCookie);
-        let putRequest = historyDB.transaction("cookies", "readwrite").objectStore("cookies").put(serializedCookie, ckey);
-        putRequest.onerror = function(event) {
-            console.error(`Failed to insert cookie (${ckey}) into IndexedDB storage: ${event.target.errorCode}`);
-        }
-    } else {
-        console.error("Could not insert cookie because database connection is closed!");
-    }
+  let ckey = constructKeyFromCookie(serializedCookie);
+
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get("cookies", function (res) {
+      if (!res.cookies) {
+        res.cookies = {};
+      }
+      res.cookies[ckey] = serializedCookie;
+      chrome.storage.local.set({ "cookies": res.cookies });
+      resolve(true);
+    });
+  });
 }
 
 /**
@@ -136,13 +109,7 @@ const clearCookies = function () {
   var removeCookie = function (cookie) {
     var url =
       "http" + (cookie.secure ? "s" : "") + "://" + cookie.domain + cookie.path;
-    chrome.cookies.remove({ url: url, name: cookie.name }).then((res) => {
-      if (res) {
-        console.log("removed cookie from chrome");
-      } else {
-        console.log("cookie removal failed");
-      }
-    });
+    chrome.cookies.remove({ url: url, name: cookie.name });
   };
 
   chrome.cookies.getAll({}, function (all_cookies) {
@@ -153,57 +120,27 @@ const clearCookies = function () {
     }
   });
 
-  // Second, we also clear the historyDB
-  if (historyDB !== undefined) {
-    return new Promise((resolve) => {
-      let trans = historyDB.transaction(["cookies"], "readwrite");
-      trans.oncomplete = () => {
-        resolve();
-      };
-
-      trans.onerror = () => {
-        console.error(`Error clearing cookies from historydb: ${trans.error}`);
-      }
-
-      let store = trans.objectStore("cookies");
-      store.clear();
-    });
+  if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
+    chrome.cookies.onChanged.addListener(cookieListener);
+    console.log("added listener");
   } else {
-    console.error(
-      "Could not clear cookies because database connection is closed!"
-    );
+    console.log("already has listener");
   }
+
+  chrome.storage.local.set({ "cookies": {} });
 };
 
 /**
  * Retrieve all cookies from IndexedDB storage via a transaction.
  * @returns {Promise<Object>} Array of all cookies.
  */
-const getCookiesFromStorage = async function () {
-  if (historyDB !== undefined) {
-    return new Promise((resolve) => {
-      let trans = historyDB.transaction(["cookies"], "readonly");
-      trans.oncomplete = () => {
-        resolve(cookies);
-      };
-
-      let store = trans.objectStore("cookies");
-      let cookies = [];
-
-      store.openCursor().onsuccess = (e) => {
-        let cursor = e.target.result;
-        if (cursor) {
-          cookies.push(cursor.value);
-          cursor.continue();
-        }
-      };
+const getCookiesFromStorage = function () {
+  return new Promise((resolve, _) => {
+    chrome.storage.local.get("cookies", function (res) {
+      resolve(res.cookies);
     });
-  } else {
-    console.error(
-      "Could not get cookie because database connection is closed!"
-    );
-  }
-};
+  });
+}
 
 /**
  * Retrieve serialized cookie from IndexedDB storage via a transaction.
@@ -211,23 +148,17 @@ const getCookiesFromStorage = async function () {
  * @returns {Promise<Object>} Either the cookie if found, or undefined if not.
  */
 const retrieveCookieFromStorage = function(cookieDat) {
-    if (historyDB !== undefined) {
-        let ckey = constructKeyFromCookie(cookieDat);
+    let ckey = constructKeyFromCookie(cookieDat);
 
-        let request = historyDB.transaction("cookies").objectStore("cookies").get(ckey);
-        return new Promise((resolve, reject) => {
-            request.onerror = function(event) {
-                console.error("Failed to retrieve cookie: " + ckey);
-                reject(`Error on retrieving cookie (${ckey}) -- Error code ${event.target.errorCode}`);
-            };
-            request.onsuccess = function(event) {
-                resolve(event.target.result);
-            };
-        });
-    } else {
-        console.error("Could not retrieve cookie because database connection is closed!");
-        return new Promise((resolve, reject) => { reject("Database connection closed."); });
-    }
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get("cookies", function (res) {
+        if (res.cookies[ckey]) {
+            resolve(res.cookies[ckey]);
+        } else {
+            resolve(null);
+        }
+      });
+    });
 }
 
 /**
@@ -240,10 +171,12 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     });
   } else if (request === "clear_cookies") {
     console.log("background is clearing cookies...");
-    clearCookies().then((res) => {
-      sendResponse(res);
-      return true;
-    });
+    // clearCookies().then((res) => {
+    //   sendResponse(res);
+    //   return true;
+    // });
+    clearCookies();
+    sendResponse(true);
   } else if (request === "start_scan") {
     if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
       chrome.cookies.onChanged.addListener(cookieListener);
@@ -264,14 +197,14 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
         sendResponse("no cookies to analyze");
         return true;
       }
-      for (let c of cookies) {
-        analyzeCookie(c);
+      for (let c of Object.keys(cookies)) {
+        analyzeCookie(cookies[c]);
       }
       sendResponse("analyzed");
     });
   } else if (request === "total_cookies") {
     getCookiesFromStorage().then((cookies) => {
-      sendResponse(cookies.length);
+      sendResponse(Object.keys(cookies).length);
     })
   }
   return true; // Need this to avoid 'message port closed' error
@@ -397,7 +330,10 @@ const analyzeCookie = function (cookie) {
 
     // If consent is given, store the cookie again.
     analyzeCookie(serializedCookie);
-    insertCookieIntoStorage(serializedCookie);
+    const inserted = await insertCookieIntoStorage(serializedCookie);
+    if (!inserted) {
+      console.error("couldn't insert cookie");
+    }
 }
 
 /**
@@ -407,7 +343,8 @@ const analyzeCookie = function (cookie) {
  * @param {Object} changeInfo  Contains the cookie itself, and cause info.
  */
 const cookieListener = function (changeInfo) {
-  if (!changeInfo.removed && historyDB) {
+  if (!changeInfo.removed) {
+    console.log("new cookie");
     handleCookie(changeInfo.cookie, true, false);
   }
 }

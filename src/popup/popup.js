@@ -37,7 +37,8 @@ async function startScan() {
           console.log(`cleared cookies: ${res}`);
         });
       } catch(err) {
-        console.error("error clearing cookies")
+        console.error("error clearing cookies");
+        return;
       }
       const scan = {
         'stage': SCANSTAGE[1],
@@ -93,13 +94,9 @@ function advancedScan() {
     res.scan.advanced = true;
     chrome.storage.local.set({"scan": res.scan});
 
-    try {
-      chrome.runtime.sendMessage("clear_cookies", function (res) {
-        console.log(`cleared cookies: ${res}`);
-      });
-    } catch(err) {
-      console.error("error clearing cookies")
-    }
+    chrome.runtime.sendMessage("clear_cookies", function (res) {
+      console.log(`cleared cookies: ${res}`);
+    });
 
     setContent(SCANSTAGE[2]);
     renderScan();
@@ -531,24 +528,16 @@ chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
     setContent(res.scan.stage);
     renderScan();
-    try {
-      chrome.runtime.sendMessage("analyze_cookies", function (res) {
-        console.log(res);
-        renderScan();
-      });
-    } catch(err) {
-      console.error("error analyzing cookies")
-    }
-    // intervalID = window.setInterval(() => {
-    //   try {
-    //     chrome.runtime.sendMessage("analyze_cookies", function (res) {
-    //       renderScan();
-    //     });
-    //   } catch(err) {
-    //     console.error("error analyzing cookies")
-    //   }
-    //   // renderScan();
-    // }, 2000);
+    intervalID = window.setInterval(() => {
+      try {
+        chrome.runtime.sendMessage("analyze_cookies", function (res) {
+          renderScan();
+        });
+      } catch(err) {
+        console.error("error analyzing cookies")
+      }
+      // renderScan();
+    }, 2000);
   } else {
     setContent(SCANSTAGE[0]);
   }
