@@ -191,6 +191,13 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     } else {
       sendResponse("no listener attached");
     }
+  } else if (request === "start_advanced") {
+    if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
+      chrome.cookies.onChanged.addListener(cookieListener);
+      sendResponse("added listener")
+    } else {
+      sendResponse("already has listener");
+    }
   } else if (request === "analyze_cookies") {
     getCookiesFromStorage().then((cookies) => {
       if (!cookies) {

@@ -98,6 +98,10 @@ function advancedScan() {
       console.log(`cleared cookies: ${res}`);
     });
 
+    chrome.runtime.sendMessage("start_advanced", function (res) {
+      console.log(`started advanced: ${res}`);
+    });
+
     setContent(SCANSTAGE[2]);
     renderScan();
   });
