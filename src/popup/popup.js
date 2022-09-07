@@ -25,10 +25,20 @@ async function getURL() {
  */
 async function startScan() {
   const url = await getURL();
-  chrome.storage.local.get("scan", (res) => {
-    if (!res || !res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
+  // chrome.storage.local.get("scan", (res) => {
+  //   if (!res) {
+  //     console.error(`Connection to local storage failed: ${res}`);
+  //   }
+
+    // if (!res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
       console.log("Starting scan...");
-      deleteCookies();
+      try {
+        chrome.runtime.sendMessage("clear_cookies", function (res) {
+          console.log(`cleared cookies: ${res}`);
+        });
+      } catch(err) {
+        console.error("error clearing cookies")
+      }
       const scan = {
         'stage': SCANSTAGE[1],
         'cmp': null,
@@ -49,10 +59,10 @@ async function startScan() {
 
       // TODO: Not sure if good UX but fixes the update problem for now
       window.close();
-    } else {
-      console.error("Can't start scan.");
-    }
-  });
+    // } else {
+    //   console.error("Can't start scan.");
+    // }
+  // });
 }
 
 function stopScan() {
@@ -82,7 +92,14 @@ function advancedScan() {
     res.scan.stage = SCANSTAGE[2];
     res.scan.advanced = true;
     chrome.storage.local.set({"scan": res.scan});
-    deleteCookies();
+
+    try {
+      chrome.runtime.sendMessage("clear_cookies", function (res) {
+        console.log(`cleared cookies: ${res}`);
+      });
+    } catch(err) {
+      console.error("error clearing cookies")
+    }
 
     setContent(SCANSTAGE[2]);
     renderScan();
@@ -134,6 +151,14 @@ function setContent(stage) {
             <div><b>Choices</b></div>
             <div id="choicesdiv"><i>Unknown</i></div>
           </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Consent notice</b></div>
+            <div id="noticediv"><i>Unknown</i></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Cookies Total</b></div>
+            <div id="totaldiv"><i>Unknown</i></div>
+          </div>
         </div>
         <div class="accordion accordion-flush analysis-accordion" id="accordionWarnings">
           <div class="accordion-item" id="warnings">
@@ -174,6 +199,14 @@ function setContent(stage) {
           <div class="d-flex justify-content-between">
             <div><b>Choices</b></div>
             <div id="choicesdiv"><i>Unknown</i></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Consent notice</b></div>
+            <div id="noticediv"><i>Unknown</i></div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <div><b>Cookies Total</b></div>
+            <div id="totaldiv"><i>Unknown</i></div>
           </div>
         </div>
  
@@ -364,6 +397,16 @@ function renderScan() {
       document.getElementById("scanurl").innerHTML = "unknown";
     }
 
+    if (res.scan.consentNotice) {
+      document.getElementById("noticediv").innerHTML = "Found";
+    } else {
+      document.getElementById("noticediv").innerHTML = "Not found";
+    }
+
+    chrome.runtime.sendMessage("total_cookies", function (res) {
+      document.getElementById("totaldiv").innerHTML = res;
+    });
+
     // advanced scan
     if (res.scan.stage === SCANSTAGE[2]) {
       // render undeclared
@@ -395,7 +438,7 @@ function renderScan() {
         <div class="box box-cookies" style="margin-bottom: 5px">
           <p class="title-line tip-line"><b>${res.scan.wrongcat[i].cookie.name}</b></p>
           <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongcat[i].cookie.domain}</p>
-          <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)}<i>but declared as ${classIndexToString(res.scan.wrongcat[i].consent_label)}</i></p>
+          <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)} <i>but declared as ${res.scan.wrongcat[i].consent_label}</i></p>
         </div>`;
         wrongcatDiv.appendChild(elWrongcat);
       }
@@ -472,7 +515,7 @@ function renderSummary() {
           <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
             <p class="title-line tip-line"><b>${res.scan.wrongcat[i].cookie.name}</b></p>
             <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongcat[i].cookie.domain}</p>
-            <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)}<i>but declared as ${classIndexToString(res.scan.wrongcat[i].consent_label)}</i></p>
+            <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)} <i>but declared as ${classIndexToString(res.scan.wrongcat[i].consent_label)}</i></p>
           </div>`;
         summaryWrongcatDiv.appendChild(elWrongcat);
       }
@@ -488,9 +531,24 @@ chrome.storage.local.get("scan", (res) => {
   if (res.scan && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
     setContent(res.scan.stage);
     renderScan();
-    intervalID = window.setInterval(() => {
-      renderScan();
-    }, 2000);
+    try {
+      chrome.runtime.sendMessage("analyze_cookies", function (res) {
+        console.log(res);
+        renderScan();
+      });
+    } catch(err) {
+      console.error("error analyzing cookies")
+    }
+    // intervalID = window.setInterval(() => {
+    //   try {
+    //     chrome.runtime.sendMessage("analyze_cookies", function (res) {
+    //       renderScan();
+    //     });
+    //   } catch(err) {
+    //     console.error("error analyzing cookies")
+    //   }
+    //   // renderScan();
+    // }, 2000);
   } else {
     setContent(SCANSTAGE[0]);
   }

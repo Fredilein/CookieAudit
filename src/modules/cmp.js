@@ -14,8 +14,8 @@ export const analyzeCMP = function (cookie) {
         'choices': choices
       };
     case "eupubconsent-v2":
-      console.log(cookie.name, " - ", cookie.domain);
-      console.log(cookie.value);
+      // console.log(cookie.name, " - ", cookie.domain);
+      // console.log(cookie.value);
       return null;
     default:
       return null;

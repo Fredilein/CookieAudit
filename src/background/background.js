@@ -136,11 +136,18 @@ const clearCookies = function () {
   var removeCookie = function (cookie) {
     var url =
       "http" + (cookie.secure ? "s" : "") + "://" + cookie.domain + cookie.path;
-    chrome.cookies.remove({ url: url, name: cookie.name });
+    chrome.cookies.remove({ url: url, name: cookie.name }).then((res) => {
+      if (res) {
+        console.log("removed cookie from chrome");
+      } else {
+        console.log("cookie removal failed");
+      }
+    });
   };
 
   chrome.cookies.getAll({}, function (all_cookies) {
     var count = all_cookies.length;
+    console.log(`${count} cookies to remove from chrome`);
     for (var i = 0; i < count; i++) {
       removeCookie(all_cookies[i]);
     }
@@ -153,6 +160,10 @@ const clearCookies = function () {
       trans.oncomplete = () => {
         resolve();
       };
+
+      trans.onerror = () => {
+        console.error(`Error clearing cookies from historydb: ${trans.error}`);
+      }
 
       let store = trans.objectStore("cookies");
       store.clear();
@@ -228,8 +239,10 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
       sendResponse(cookies);
     });
   } else if (request === "clear_cookies") {
+    console.log("background is clearing cookies...");
     clearCookies().then((res) => {
       sendResponse(res);
+      return true;
     });
   } else if (request === "start_scan") {
     if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
@@ -245,6 +258,21 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     } else {
       sendResponse("no listener attached");
     }
+  } else if (request === "analyze_cookies") {
+    getCookiesFromStorage().then((cookies) => {
+      if (!cookies) {
+        sendResponse("no cookies to analyze");
+        return true;
+      }
+      for (let c of cookies) {
+        analyzeCookie(c);
+      }
+      sendResponse("analyzed");
+    });
+  } else if (request === "total_cookies") {
+    getCookiesFromStorage().then((cookies) => {
+      sendResponse(cookies.length);
+    })
   }
   return true; // Need this to avoid 'message port closed' error
 });
@@ -300,13 +328,13 @@ const analyzeCookie = function (cookie) {
       } else {
         let declared = false;
         for (let cat of Object.keys(res.scan.consentNotice)) {
-          if (res.scan.consentNotice[cat].some((c) => c.name === cookie["name"])) {
+          if (res.scan.consentNotice[cat].some((c) => c.name === cookie["name"]) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
             // console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
-            res.scan.wrongcat.push({"cookie": cookie, "consent_label": res.scan.consentNotice[cat]});
+            res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
             declared = true;
           }
         }
-        if (!declared) {
+        if (!declared && !res.scan.undeclared.some((c) => c.name === cookie.name)) {
           // console.log(`Cookie ${cookie["name"]} undeclared`);
           res.scan.undeclared.push(cookie);
         }
