@@ -59,6 +59,12 @@ body {
   margin-bottom: 20px;
 }
 
+.btn-export {
+  background-color: #2473E7;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 .btn-advanced {
   margin-top: 0px;
   margin-bottom: 10px;

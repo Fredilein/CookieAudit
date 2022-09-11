@@ -9,6 +9,28 @@ const UPDATE_LIMIT = 10;
 const MINTIME = 120000;
 // const PAUSE = false;
 
+
+const storage = (() => {
+  let mutex = Promise.resolve();
+  const API = chrome.storage.sync;
+  const mutexExec = (method, data) => {
+    mutex = Promise.resolve(mutex)
+        .then(() => method(data))
+        .then(result => {
+          mutex = null;
+          return result;
+        });
+    return mutex;
+  };
+  const syncGet = data => new Promise(resolve => API.get(data, resolve));
+  const syncSet = data => new Promise(resolve => API.set(data, resolve));
+  return {
+    read: data => mutexExec(syncGet, data),
+    write: data => mutexExec(syncSet, data),
+  };
+})();
+
+
 /**
  * Construct a string formatted key that uniquely identifies the given cookie object.
  * @param {Object}    cookieDat Stores the cookie data, expects attributes name, domain and path.
@@ -86,25 +108,33 @@ const updateFEInput = async function(storedFEInput, rawCookie) {
  * Insert serialized cookie into IndexedDB storage via a transaction.
  * @param {Object} serializedCookie Cookie to insert into storage.
  */
-const insertCookieIntoStorage = function(serializedCookie) {
+const insertCookieIntoStorage = async function(serializedCookie) {
   let ckey = constructKeyFromCookie(serializedCookie);
 
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get("cookies", function (res) {
-      if (!res.cookies) {
-        res.cookies = {};
-      }
-      res.cookies[ckey] = serializedCookie;
-      chrome.storage.local.set({ "cookies": res.cookies });
-      resolve(true);
-    });
-  });
+  // return new Promise((resolve, reject) => {
+  //   chrome.storage.local.get("cookies", function (res) {
+  //     if (!res.cookies) {
+  //       res.cookies = {};
+  //     }
+  //     res.cookies[ckey] = serializedCookie;
+  //     chrome.storage.local.set({ "cookies": res.cookies });
+  //     resolve(true);
+  //   });
+  // });
+
+  let { cookies } = await storage.read("cookies");
+  console.log(`read cookies:`);
+  console.log(cookies);
+  cookies[ckey] = serializedCookie;
+  await storage.write({ cookies });
+  console.log(`inserted ${serializedCookie.name}`);
+  return true;
 }
 
 /**
  * Remove a cookie from the browser and from historyDB
  */
-const clearCookies = function () {
+const clearCookies = async function () {
   // First we delete the cookies from the browser
   var removeCookie = function (cookie) {
     var url =
@@ -127,19 +157,22 @@ const clearCookies = function () {
     console.log("already has listener");
   }
 
-  chrome.storage.local.set({ "cookies": {} });
+  // chrome.storage.local.set({ "cookies": {} });
+  await storage.write({ "cookies": {} });
 };
 
 /**
  * Retrieve all cookies from IndexedDB storage via a transaction.
  * @returns {Promise<Object>} Array of all cookies.
  */
-const getCookiesFromStorage = function () {
-  return new Promise((resolve, _) => {
-    chrome.storage.local.get("cookies", function (res) {
-      resolve(res.cookies);
-    });
-  });
+const getCookiesFromStorage = async function () {
+  // return new Promise((resolve, _) => {
+  //   chrome.storage.local.get("cookies", function (res) {
+  //     resolve(res.cookies);
+  //   });
+  // });
+  let { cookies } = await storage.read("cookies");
+  return cookies;
 }
 
 /**
@@ -147,18 +180,24 @@ const getCookiesFromStorage = function () {
  * @param {Object} cookieDat Raw cookie object that provides name, domain and path.
  * @returns {Promise<Object>} Either the cookie if found, or undefined if not.
  */
-const retrieveCookieFromStorage = function(cookieDat) {
+const retrieveCookieFromStorage = async function(cookieDat) {
     let ckey = constructKeyFromCookie(cookieDat);
 
-    return new Promise((resolve, reject) => {
-      chrome.storage.local.get("cookies", function (res) {
-        if (res.cookies[ckey]) {
-            resolve(res.cookies[ckey]);
-        } else {
-            resolve(null);
-        }
-      });
-    });
+    // return new Promise((resolve, _) => {
+    //   chrome.storage.local.get("cookies", function (res) {
+    //     if (res.cookies[ckey]) {
+    //         resolve(res.cookies[ckey]);
+    //     } else {
+    //         resolve(null);
+    //     }
+    //   });
+    // });
+  let { cookies } = await storage.read("cookies");
+  if (cookies[ckey]) {
+    return cookies[ckey];
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -178,6 +217,7 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     clearCookies();
     sendResponse(true);
   } else if (request === "start_scan") {
+    clearCookies();
     if (!chrome.cookies.onChanged.hasListener(cookieListener)) {
       chrome.cookies.onChanged.addListener(cookieListener);
       sendResponse("added listener")
@@ -211,6 +251,8 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     });
   } else if (request === "total_cookies") {
     getCookiesFromStorage().then((cookies) => {
+      console.log(`All cookies:`);
+      console.log(cookies);
       sendResponse(Object.keys(cookies).length);
     })
   }
@@ -263,12 +305,12 @@ const analyzeCookie = function (cookie) {
         chrome.storage.local.set({"scan": res.scan });
         return;
       }
-      if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => c.name === cookie["name"])) {
+      if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))) {
         // console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
       } else {
         let declared = false;
         for (let cat of Object.keys(res.scan.consentNotice)) {
-          if (res.scan.consentNotice[cat].some((c) => c.name === cookie["name"]) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
+          if (res.scan.consentNotice[cat].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, ""))) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
             // console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
             res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
             declared = true;
@@ -294,7 +336,8 @@ const analyzeCookie = function (cookie) {
     // First, if consent is given, check if the cookie has already been stored.
     let serializedCookie, storedCookie;
     try {
-        if (storedCookie = await retrieveCookieFromStorage(newCookie)) {
+        storedCookie = await retrieveCookieFromStorage(newCookie)
+        if (storedCookie) {
             if (storeUpdate) {
                 serializedCookie = await updateFEInput(storedCookie, newCookie);
             } else {
@@ -336,11 +379,13 @@ const analyzeCookie = function (cookie) {
     // }
 
     // If consent is given, store the cookie again.
-    analyzeCookie(serializedCookie);
     const inserted = await insertCookieIntoStorage(serializedCookie);
     if (!inserted) {
       console.error("couldn't insert cookie");
+      return;
     }
+
+    analyzeCookie(serializedCookie);
 }
 
 /**
@@ -351,7 +396,7 @@ const analyzeCookie = function (cookie) {
  */
 const cookieListener = function (changeInfo) {
   if (!changeInfo.removed) {
-    console.log("new cookie");
+    console.log(`new cookie: ${changeInfo.cookie.name}`);
     handleCookie(changeInfo.cookie, true, false);
   }
 }
