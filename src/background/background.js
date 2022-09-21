@@ -1,4 +1,4 @@
-import { escapeString, datetimeToExpiry, urlToUniformDomain, classIndexToString } from "/modules/globals.js";
+import { escapeString, datetimeToExpiry, urlToUniformDomain, classIndexToString, classStringToIndex } from "/modules/globals.js";
 import { extractFeatures } from "/modules/extractor.js";
 import { predictClass } from "/modules/predictor.js";
 import { analyzeCMP } from "/modules/cmp.js";
@@ -123,11 +123,8 @@ const insertCookieIntoStorage = async function(serializedCookie) {
   // });
 
   let { cookies } = await storage.read("cookies");
-  console.log(`read cookies:`);
-  console.log(cookies);
   cookies[ckey] = serializedCookie;
   await storage.write({ cookies });
-  console.log(`inserted ${serializedCookie.name}`);
   return true;
 }
 
@@ -311,9 +308,11 @@ const analyzeCookie = function (cookie) {
         let declared = false;
         for (let cat of Object.keys(res.scan.consentNotice)) {
           if (res.scan.consentNotice[cat].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, ""))) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
-            // console.log(`Cookie ${cookie["name"]} declared as ${res.scan.consentNotice[cat]} but classified as ${cookie["current_label"]}`);
-            res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
-            declared = true;
+            // Only report if classified label > declared label
+            if (classStringToIndex(cat) < cookie["current_label"]) {
+              res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
+              declared = true;
+            }
           }
         }
         if (!declared && !res.scan.undeclared.some((c) => c.name === cookie.name)) {
@@ -321,7 +320,26 @@ const analyzeCookie = function (cookie) {
           res.scan.undeclared.push(cookie);
         }
       }
+
+      // check expiry
+      for (let cat of Object.keys(res.scan.consentNotice)) {
+        const declared = res.scan.consentNotice[cat].find((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))
+        if (!declared || declared.name === "OptanonConsent") {
+          continue;
+        }
+        console.log(`Notice expiry: ${declared.expiry}\t Cookie expiry: ${cookie.variable_data[0].expiry}`);
+
+        if (declared.expiry === 'session') {
+          console.log(`Declared as session cookie and set as session is ${cookie.variable_data[cookie.variable_data.length-1].session}`);
+          return;
+        }
+
+        if (Number(cookie.variable_data[cookie.variable_data.length-1].expiry) > 1.5 * declared.expiry) {
+          res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": declared.expiry});
+        }
+      }
     }
+
     chrome.storage.local.set({"scan": res.scan });
   });
 }
@@ -371,13 +389,6 @@ const analyzeCookie = function (cookie) {
         console.debug("Skip Prediction: Cookie (%s;%s;%s) with label (%s)", newCookie.name, newCookie.domain, newCookie.path, classIndexToString(clabel));
     }
 
-    // If removal is paused, don't make the decision.
-    // if (PAUSE) {
-    //     console.debug(`Pause Mode Removal Skip: Cookie Identifier: ${constructKeyFromCookie(newCookie)} -- Assigned Label: ${classIndexToString(clabel)}`);
-    // } else {
-    //     makePolicyDecision(newCookie, clabel);
-    // }
-
     // If consent is given, store the cookie again.
     const inserted = await insertCookieIntoStorage(serializedCookie);
     if (!inserted) {
@@ -396,7 +407,6 @@ const analyzeCookie = function (cookie) {
  */
 const cookieListener = function (changeInfo) {
   if (!changeInfo.removed) {
-    console.log(`new cookie: ${changeInfo.cookie.name}`);
     handleCookie(changeInfo.cookie, true, false);
   }
 }

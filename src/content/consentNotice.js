@@ -2,16 +2,21 @@
 // Just waiting for the page to be loaded sometimes isn't enough for fully getting the DOM
 // therefore we wait an additional second.
 // Just waiting for the document to load isn't enough somehow, that's why we wait for an additional second
+
+const SCANSTAGE = ["initial", "necessary", "all", "finished"];
+
 const _ = setTimeout(async () => {
   let found = false;
   chrome.storage.local.get("scan", async (res) => {
-    if (res && res.scan && res.scan.consentNotice) {
+    if (res && res.scan && (res.scan.consentNotice || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3])) {
       return;
     }
     let consentNotice;
     consentNotice = await searchCookiebot();
     if (consentNotice) {
       console.log("Cookiebot notice:\n", consentNotice);
+      res.scan.consentNotice = consentNotice;
+      chrome.storage.local.set({"scan": res.scan });
     }
     consentNotice = await searchOnetrust();
     if (consentNotice) {
@@ -56,9 +61,8 @@ async function searchCookiebot() {
 
   // TODO: Dino doesn't necessarily take the current URL as a referrer.
   console.log(`https://consent.cookiebot.com/${cbid}/cc.js?referer=${document.URL}`);
-  // TODO: cors-anywhere is used to circumvent CORS protection. Here just the demo version is used for testing
-  // -> Hosting our own cors-anywhere is the only workaround I see
-  let res = await fetch(`https://cors-anywhere.herokuapp.com/https://consent.cookiebot.com/${cbid}/cc.js?referer=${document.URL}`);
+  // -> We host our own cors-everywhere on heroku to circumvent CORS protection
+  let res = await fetch(`https://secure-taiga-11828.herokuapp.com/https://consent.cookiebot.com/${cbid}/cc.js?referer=${document.URL}`);
   if (!res.ok) {
     console.error(`Status ${res.status}: Something went wrong while fetching the CookieBot consent notice`);
     return null;
@@ -99,7 +103,6 @@ async function searchCookiebot() {
     }
     consentNotice[cat] = JSON.parse(matches[1]);
   }
-  //console.log("Consent Notice: ", consentNotice);
   return parseCookieDataCookiebot(consentNotice);
 }
 
@@ -110,15 +113,65 @@ function parseCookieDataCookiebot(consentNotice) {
     }
     let cookies = [];
     for (let c of consentNotice[cat]) {
+      const expiry = parseExpiryCookiebot(c[3]);
       cookies.push({
         "name": c[0],
         "host": c[1],
-        "description": c[2]
+        "description": c[2],
+        "expiry": expiry
       });
     }
     consentNotice[cat] = cookies;
   }
   return consentNotice
+}
+
+function parseExpiryCookiebot(expiry_str) {
+  const second_pattern = new RegExp("(second(s)?|sekunde(n)?)", 'i');
+  const minute_pattern = new RegExp("(minute[ns]?)", 'i');
+  const hour_pattern = new RegExp("(hour(s)?|stunde(n)?)", 'i');
+  const day_pattern = new RegExp("(day(s)?)", 'i');
+  const week_pattern = new RegExp("(week(s)?|woche(n)?)", 'i');
+  const month_pattern = new RegExp("(month(s)?)", 'i');
+  const year_pattern = new RegExp("(year(s)?|jahr(e)?)", 'i');
+
+  if (expiry_str.toLowerCase() === "session") {
+    return "session";
+  }
+  if (expiry_str.toLowerCase() === "persistent" || expiry_str.toLowerCase() === "persistant") {
+    return "persistent";
+  }
+
+  const expiry = expiry_str.split(' ');
+  let count, interval;
+  let totalcount = 0;
+  if (expiry.length % 2) {
+    console.error(`Odd length expiry string: "${expiry_str}"`);
+    return;
+  }
+  for (let i = 0; i < expiry.length / 2; i+= 2) {
+    count = Number(expiry[i]);
+    interval = expiry[i + 1];
+    if (interval.match(second_pattern)) {
+      totalcount = totalcount + count;
+    } else if (interval.match(minute_pattern)) {
+      totalcount = totalcount + count * 60;
+    } else if (interval.match(hour_pattern)) {
+      totalcount = totalcount + count * 3600;
+    } else if (interval.match(day_pattern)) {
+      totalcount = totalcount + count * 3600 * 24;
+    } else if (interval.match(week_pattern)) {
+      totalcount = totalcount + count * 3600 * 24 * 7;
+    } else if (interval.match(month_pattern)) {
+      totalcount = totalcount + count * 3600 * 24 * 30;
+    } else if (interval.match(year_pattern)) {
+      totalcount = totalcount + count * 3600 * 24 * 365;
+    } else {
+      console.error(`Unknown date format: ${expiry_str}`);
+    }
+  }
+
+  return totalcount;
 }
 
 async function searchOnetrust() {
@@ -170,6 +223,7 @@ async function searchOnetrust() {
     return null;
   }
   const consentJson = await res.json();
+  console.log("Complete OneTrust notice:\n", consentJson);
   const groups = consentJson["DomainData"]["Groups"];
   let consentNotice = {
     "Necessary": [],
@@ -197,13 +251,24 @@ function parseCookieDataOnetrust(consentNotice) {
     }
     let cookies = [];
     for (let c of consentNotice[cat]) {
+      const expiry = parseExpiryOnetrust(c.Length);
       cookies.push({
         "name": c.Name,
         "host": c.Host,
-        "description": (c.description) ? c.description : null
+        "description": (c.description) ? c.description : null,
+        "expiry": expiry,
+        "session": c.IsSession
       });
     }
     consentNotice[cat] = cookies;
   }
   return consentNotice
+}
+
+function parseExpiryOnetrust(expiry_str) {
+  if (expiry_str === "0") {
+    return 60;
+  } else {
+    return Number(expiry_str) * 3600 * 24;
+  }
 }

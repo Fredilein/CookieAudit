@@ -47,6 +47,7 @@ async function startScan() {
         'nonnecessary': [],
         'wrongcat': [],
         'undeclared': [],
+        'wrongexpiry': [],
         'consentNotice': null,
         'advanced': false
       };
@@ -265,6 +266,20 @@ function setContent(stage) {
             </div>
           </div>
         </div>
+        <div class="accordion accordion-flush analysis-accordion" id="accordionExpiry" hidden> 
+          <div class="accordion-item" id="wrongexpiry">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                <span class="badge rounded-pill count-pill" id="wrongexpiry-pill">0</span> Expiration time is too long
+              </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExpiry">
+              <div class="accordion-body" id="wrongexpiry-body">
+                No cookies with expiry too long
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="section-buttons">
           <button id="stopScan" class="btn btn-danger btn-main btn-stop"><i class="fa-solid fa-stop"></i> Stop Scan</button>
         </div>`;
@@ -467,6 +482,24 @@ function renderScan() {
           <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.wrongcat[i].cookie.current_label)} <i>but declared as ${res.scan.wrongcat[i].consent_label}</i></p>
         </div>`;
         wrongcatDiv.appendChild(elWrongcat);
+      }
+
+      // render wrong expiry
+      const wrongexpiryDiv = document.getElementById("wrongexpiry-body");
+      wrongexpiryDiv.innerHTML = "";
+      if (res.scan.wrongexpiry.length > 0) {
+        document.getElementById("accordionExpiry").hidden = false;
+        document.getElementById("wrongexpiry-pill").innerText = res.scan.wrongexpiry.length;
+      }
+      for (let i in res.scan.wrongexpiry) {
+        let elWrongexpiry = document.createElement("div");
+        elWrongexpiry.innerHTML = `
+        <div class="box box-cookies" style="margin-bottom: 5px">
+          <p class="title-line tip-line"><b>${res.scan.wrongexpiry[i].cookie.name}</b></p>
+          <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongexpiry[i].cookie.domain}</p>
+          <p class="tip-line"><i class="fa-solid fa-clock"></i> Expiry is much larger than declared</p>
+        </div>`;
+        wrongexpiryDiv.appendChild(elWrongexpiry);
       }
     }
   });

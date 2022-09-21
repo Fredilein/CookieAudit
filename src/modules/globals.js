@@ -201,6 +201,32 @@ export const classIndexToString = (idx) => {
 };
 
 /**
+ * Transform class string to index. Inverse of above
+ * @returns {Number} idx class label index
+ * @param classStr
+ */
+export const classStringToIndex = (classStr) => {
+  switch (classStr) {
+    case "Unknown":
+      return -1;
+    case "Necessary":
+      return 0;
+    case "Functionality":
+      return 1;
+    case "Analytical":
+      return 2;
+    case "Advertising":
+      return 3;
+    case "Uncategorized":
+      return 4;
+    case "Social Media":
+      return 5;
+    default:
+      return -1;
+  }
+};
+
+/**
  * Helper function to assign static localization text to an element's textContent field.
  * @param {String} elemID Element ID
  * @param {String} locID Localization ID
