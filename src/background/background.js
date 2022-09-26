@@ -5,6 +5,8 @@ import { analyzeCMP } from "/modules/cmp.js";
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
+const NOCHECK_EXPIRY = ["OptanonConsent", "OptanonAlertBoxClosed"];
+
 const UPDATE_LIMIT = 10;
 const MINTIME = 120000;
 // const PAUSE = false;
@@ -12,7 +14,7 @@ const MINTIME = 120000;
 
 const storage = (() => {
   let mutex = Promise.resolve();
-  const API = chrome.storage.sync;
+  const API = chrome.storage.local;
   const mutexExec = (method, data) => {
     mutex = Promise.resolve(mutex)
         .then(() => method(data))
@@ -248,8 +250,6 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     });
   } else if (request === "total_cookies") {
     getCookiesFromStorage().then((cookies) => {
-      console.log(`All cookies:`);
-      console.log(cookies);
       sendResponse(Object.keys(cookies).length);
     })
   }
@@ -294,54 +294,110 @@ const analyzeCookie = function (cookie) {
 
     // getWarnings
     if (res.scan.stage === SCANSTAGE[1]) {
-      if (cookie["current_label"] > 0 && !res.scan.nonnecessary.some((c) => c.name === cookie.name)) {
+      if (cookie.current_label > 0 && !res.scan.nonnecessary.some((c) => c.name === cookie.name)) {
         res.scan.nonnecessary.push(cookie);
       }
-    } else if (res.scan.stage === SCANSTAGE[2]){
+    }
+
+    if (res.scan.stage === SCANSTAGE[2]){
       if (!res.scan.consentNotice) {
         chrome.storage.local.set({"scan": res.scan });
         return;
       }
-      if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))) {
-        // console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
-      } else {
-        let declared = false;
-        for (let cat of Object.keys(res.scan.consentNotice)) {
-          if (res.scan.consentNotice[cat].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, ""))) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
-            // Only report if classified label > declared label
-            if (classStringToIndex(cat) < cookie["current_label"]) {
-              res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
-              declared = true;
-            }
-          }
-        }
-        if (!declared && !res.scan.undeclared.some((c) => c.name === cookie.name)) {
-          // console.log(`Cookie ${cookie["name"]} undeclared`);
-          res.scan.undeclared.push(cookie);
-        }
-      }
 
-      // check expiry
-      for (let cat of Object.keys(res.scan.consentNotice)) {
-        const declared = res.scan.consentNotice[cat].find((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))
-        if (!declared || declared.name === "OptanonConsent") {
-          continue;
-        }
-        console.log(`Notice expiry: ${declared.expiry}\t Cookie expiry: ${cookie.variable_data[0].expiry}`);
+      const cookieCategories = findCookieCategories(cookie.name, res.scan.consentNotice);
 
-        if (declared.expiry === 'session') {
-          console.log(`Declared as session cookie and set as session is ${cookie.variable_data[cookie.variable_data.length-1].session}`);
+      if (cookieCategories.length === 0 && !res.scan.undeclared.some((c) => c.name === cookie.name)) {
+        res.scan.undeclared.push(cookie);
+      } else if (cookieCategories.length > 1 && !res.scan.multideclared.some((c) => c.name === cookie.name)) {
+        res.scan.multideclared.push(cookie);
+      } else if (cookieCategories.length === 1) {
+        // cookie is present in exactly one category of the consent notice
+        const cat = cookieCategories[0];
+        if (classStringToIndex(cat) < cookie.current_label && !res.scan.wrongcat.some((c) => c.cookie.name === cookie.name)) {
+          res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
+        }
+
+        // check expiry
+        if (!res.scan.consentNotice[cat]) {
+          chrome.storage.local.set({"scan": res.scan });
+          return;
+        }
+        const declaration = res.scan.consentNotice[cat].find((c) => cookie.name.startsWith(c.name.replace(/x+$/, "")))
+        if (!declaration || NOCHECK_EXPIRY.includes(declaration.name) || res.scan.wrongexpiry.some((c) => c.cookie.name === cookie.name)) {
+          chrome.storage.local.set({"scan": res.scan });
           return;
         }
 
-        if (Number(cookie.variable_data[cookie.variable_data.length-1].expiry) > 1.5 * declared.expiry) {
-          res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": declared.expiry});
+        if (declaration.session) {
+          if (!cookie.variable_data[cookie.variable_data.length-1].session) {
+            res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": "session"});
+            chrome.storage.local.set({"scan": res.scan });
+            return;
+          }
+        }
+
+        if (cookie.variable_data[cookie.variable_data.length-1].session) {
+          res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": "nosession"});
+          chrome.storage.local.set({"scan": res.scan });
+          return;
+        }
+
+        if (Number(cookie.variable_data[cookie.variable_data.length-1].expiry) > 1.5 * declaration.expiry) {
+          res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": declaration.expiry});
         }
       }
+
+      // if (res.scan.consentNotice[classIndexToString(cookie["current_label"])].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))) {
+      //   // console.log(`Cookie ${cookie["name"]} correctly declared as ${cookie["current_label"]}`);
+      // } else {
+      //   let declared = false;
+      //   for (let cat of Object.keys(res.scan.consentNotice)) {
+      //     if (res.scan.consentNotice[cat].some((c) => cookie["name"].startsWith(c.name.replace(/x+$/, ""))) && !res.scan.wrongcat.some((c) => c.cookie.name === cookie["name"])) {
+      //       // Only report if classified label > declared label
+      //       if (classStringToIndex(cat) < cookie["current_label"]) {
+      //         res.scan.wrongcat.push({"cookie": cookie, "consent_label": cat});
+      //         declared = true;
+      //       }
+      //     }
+      //   }
+      //   if (!declared && !res.scan.undeclared.some((c) => c.name === cookie.name)) {
+      //     // console.log(`Cookie ${cookie["name"]} undeclared`);
+      //     res.scan.undeclared.push(cookie);
+      //   }
+      // }
+
+      // check expiry
+      // for (let cat of Object.keys(res.scan.consentNotice)) {
+      //   const declared = res.scan.consentNotice[cat].find((c) => cookie["name"].startsWith(c.name.replace(/x+$/, "")))
+      //   if (!declared || declared.name === "OptanonConsent" || declared.name === "OptanonAlertBoxClosed") {
+      //     continue;
+      //   }
+      //   console.log(`Notice expiry: ${declared.expiry}\t Cookie expiry: ${cookie.variable_data[0].expiry}`);
+      //
+      //   if (declared.expiry === 'session') {
+      //     console.log(`Declared as session cookie and set as session is ${cookie.variable_data[cookie.variable_data.length-1].session}`);
+      //     continue;
+      //   }
+      //
+      //   if (Number(cookie.variable_data[cookie.variable_data.length-1].expiry) > 1.5 * declared.expiry) {
+      //     res.scan.wrongexpiry.push({"cookie": cookie, "consent_expiry": declared.expiry});
+      //   }
+      // }
     }
 
     chrome.storage.local.set({"scan": res.scan });
   });
+}
+
+const findCookieCategories = function (cookieName, consentNotice) {
+  let categories = [];
+  for (let cat of Object.keys(consentNotice)) {
+    if (consentNotice[cat].find((c) => cookieName.startsWith(c.name.replace(/x+$/, "")))) {
+      categories.push(cat);
+    }
+  }
+  return categories;
 }
 
 /**
@@ -349,7 +405,7 @@ const analyzeCookie = function (cookie) {
  * @param {Object} newCookie Raw cookie object directly from the browser.
  * @param {Object} storeUpdate Whether
  */
- const handleCookie = async function (newCookie, storeUpdate, overrideTimeCheck){
+const handleCookie = async function (newCookie, storeUpdate, overrideTimeCheck) {
 
     // First, if consent is given, check if the cookie has already been stored.
     let serializedCookie, storedCookie;

@@ -98,9 +98,9 @@ const getStorageValue = async function (stType, key) {
  */
 export const getExtensionFile = async function (url, dtype, callback, errorCallback = null) {
   let res = await fetch(url)
-  if (dtype == "text") {
+  if (dtype === "text") {
     callback(await res.text());
-  } else if (dtype == "json") {
+  } else if (dtype === "json") {
     callback(await res.json());
   } else {
     console.error("Wrong dtype");

@@ -44,7 +44,6 @@ async function searchCookiebot() {
     return null;
   }
 
-  // TODO: More patterns (see Dino)
   const pattern1 = new RegExp("[&?]cbid=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
 
   const cbidMatches = el.src.match(pattern1);
@@ -114,11 +113,13 @@ function parseCookieDataCookiebot(consentNotice) {
     let cookies = [];
     for (let c of consentNotice[cat]) {
       const expiry = parseExpiryCookiebot(c[3]);
+      const session = expiry === "session";
       cookies.push({
         "name": c[0],
         "host": c[1],
         "description": c[2],
-        "expiry": expiry
+        "expiry": expiry,
+        "session": session
       });
     }
     consentNotice[cat] = cookies;

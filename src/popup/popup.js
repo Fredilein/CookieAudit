@@ -2,6 +2,14 @@ let contentDiv = document.getElementById("content");
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
+const FIXES = {
+  "nonessential": "You must receive users' consent before you use any cookies except strictly necessary cookies.",
+  "undeclared": "You must declare and provide information about each cookie before consent is received.",
+  "wrongcat": "We classified some cookies differently than you, make sure you put each cookie in the correct category.",
+  "wrongexpiry-time": "The expiration time of some cookies is much higher than declared. Lower the expiry date on the cookie or correct the declaration.",
+  "wrongexpiry-session": "You declared some cookies as session-cookies but set them to be persistent."
+}
+
 function deleteCookies() {
   chrome.runtime.sendMessage("clear_cookies", function (res) {
     console.log(res);
@@ -16,6 +24,9 @@ async function getURL() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   // `tab` will either be a `tabs.Tab` instance or `undefined`.
   let [tab] = await chrome.tabs.query(queryOptions);
+  if (!tab || !tab.url) {
+    return undefined;
+  }
   return tab.url;
 }
 
@@ -25,42 +36,47 @@ async function getURL() {
  */
 async function startScan() {
   const url = await getURL();
+  if (!url) {
+    console.log('Open a website before starting a scan');
+    return;
+  }
   // chrome.storage.local.get("scan", (res) => {
   //   if (!res) {
   //     console.error(`Connection to local storage failed: ${res}`);
   //   }
 
     // if (!res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
-      console.log("Starting scan...");
-      try {
-        chrome.runtime.sendMessage("clear_cookies", function (res) {
-          console.log(`cleared cookies: ${res}`);
-        });
-      } catch(err) {
-        console.error("error clearing cookies");
-        return;
-      }
-      const scan = {
-        'stage': SCANSTAGE[1],
-        'cmp': null,
-        'url': url,
-        'nonnecessary': [],
-        'wrongcat': [],
-        'undeclared': [],
-        'wrongexpiry': [],
-        'consentNotice': null,
-        'advanced': false
-      };
-      chrome.storage.local.set({ scan });
+  console.log("Starting scan...");
+  try {
+    chrome.runtime.sendMessage("clear_cookies", function (res) {
+      console.log(`cleared cookies: ${res}`);
+    });
+  } catch(err) {
+    console.error("error clearing cookies");
+    return;
+  }
+  const scan = {
+    'stage': SCANSTAGE[1],
+    'cmp': null,
+    'url': url,
+    'nonnecessary': [],
+    'wrongcat': [],
+    'undeclared': [],
+    'multideclared': [],
+    'wrongexpiry': [],
+    'consentNotice': null,
+    'advanced': false
+  };
+  chrome.storage.local.set({ "scan": scan });
 
-      chrome.runtime.sendMessage("start_scan", function (res) {
-        console.log(res);
-      });
+  chrome.runtime.sendMessage("start_scan", function (res) {
+    console.log(res);
+  });
 
-      setContent(SCANSTAGE[1]);
+  setContent(SCANSTAGE[1]);
 
-      // TODO: Not sure if good UX but fixes the update problem for now
-      window.close();
+  // TODO: Not sure if good UX but fixes the update problem for now
+  window.close();
     // } else {
     //   console.error("Can't start scan.");
     // }
@@ -136,8 +152,9 @@ function setContent(stage) {
             <i class="fa-regular fa-lightbulb"></i> Tips
           </div>
           <ul class="ul-tips">
-              <li>Close all tabs before starting a scan</li>
-              <li>Don't open any other website</li>
+              <li>Open the target website</li>
+              <li>Close all other tabs before starting a scan</li>
+              <li>If the website uses OneTrust or Cookiebot, you will be able to conduct an advanced scan</li>
               <li>All your cookies will be deleted!</li>
             </ul>   
         </div>
@@ -307,8 +324,8 @@ function setContent(stage) {
             <div id="summary-notice"><i>Unknown</i></div>
           </div>
         </div>
-        <div class="box">
-          <p><i class="fa-solid fa-circle-info"></i> Run an advanced scan to check if all cookies are declared in the consent notice.</p>
+        <div class="box" id="siteInfoBox">
+          <p><i class="fa-solid fa-circle-info"></i> If the website uses OneTrust or Cookiebot you can run an advanced scan to check if all cookies are declared in the consent notice.</p>
         </div>
         
         <h1 class="display-5">CMP</h1>
@@ -323,22 +340,45 @@ function setContent(stage) {
         </div>
         
         <h1 class="display-5">Non-essential cookies</h1>
-        <div id="summary-nonnecessary"></div>
-        <div class="box">
+        <div class="container text-left">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4" id="summary-nonnecessary"></div>
+        </div>
+        <div class="box" id="nonnecessaryBox">
           <p><i class="fa-solid fa-circle-info"></i> These cookies were set even though the user hasn't yet chosen to allow all cookies.</p>
         </div>
         
         <h1 class="display-5">Undeclared cookies</h1>
-        <div id="summary-undeclared"></div>
-        <div class="box">
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4" id="summary-undeclared"></div>
+        </div>
+        <div class="box" id="undeclaredBox">
           <p><i class="fa-solid fa-circle-info"></i> These cookies weren't declared in the consent notice.</p>
         </div>
         
         <h1 class="display-5">Wrongly categorized</h1>
-        <div id="summary-wrongcat"></div>
-        <div class="box">
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4" id="summary-wrongcat"></div>
+        </div>
+        <div class="box" id="wrongcatBox">
           <p><i class="fa-solid fa-circle-info"></i> We classified these cookies differently than what they were declared as in the consent notice.</p>
-        </div>`;
+        </div>
+
+        <h1 class="display-5">Wrong expiration time</h1>
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4" id="summary-wrongexpiry"></div>
+        </div>
+        <div class="box" id="wrongexpiryBox">
+            <p><i class="fa-solid fa-circle-info"></i> The expiration time of these cookies is at least 1.5 times higher than declared in the consent notice.</p>
+        </div>
+ 
+        <div class="section-tips section-fixes">
+          <div class="header-tips">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Fixes
+          </div>
+          <p class="summary-p" id="fixesBox">We suggest following fixes for the scanned website:</p>
+          <ul class="ul-tips" id="summary-fixes"></ul>   
+        </div>
+        `;
 
         if (document.getElementById("summary-popup")) {
           break;
@@ -357,8 +397,8 @@ function setContent(stage) {
           const panelWindowInfo = chrome.windows.create({
             url: chrome.runtime.getURL("popup/summary.html"),
             type:"popup",
-            height: 500,
-            width: 400,
+            height: 800,
+            width: 1200,
           }, (c) => {
             console.log(c);
             // renderSummary();
@@ -444,9 +484,11 @@ function renderScan() {
       document.getElementById("noticediv").innerHTML = "Not found";
     }
 
-    chrome.runtime.sendMessage("total_cookies", function (res) {
-      document.getElementById("totaldiv").innerHTML = res;
-    });
+    if (res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
+      chrome.runtime.sendMessage("total_cookies", function (res) {
+        document.getElementById("totaldiv").innerHTML = res;
+      });
+    }
 
     // advanced scan
     if (res.scan.stage === SCANSTAGE[2]) {
@@ -493,11 +535,19 @@ function renderScan() {
       }
       for (let i in res.scan.wrongexpiry) {
         let elWrongexpiry = document.createElement("div");
+        let expiryText = '';
+        if (res.scan.wrongexpiry[i].consent_expiry === "session") {
+          expiryText = 'Declared as session cookie but set as non-session';
+        } else if (res.scan.wrongexpiry[i].consent_expiry === "nosession") {
+          expiryText = 'Declared as non-session cookie but set as session';
+        } else {
+          expiryText = 'Expiry is much larger than declared';
+        }
         elWrongexpiry.innerHTML = `
         <div class="box box-cookies" style="margin-bottom: 5px">
           <p class="title-line tip-line"><b>${res.scan.wrongexpiry[i].cookie.name}</b></p>
           <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.wrongexpiry[i].cookie.domain}</p>
-          <p class="tip-line"><i class="fa-solid fa-clock"></i> Expiry is much larger than declared</p>
+          <p class="tip-line"><i class="fa-solid fa-clock"></i> ${expiryText}</p>
         </div>`;
         wrongexpiryDiv.appendChild(elWrongexpiry);
       }
@@ -507,14 +557,16 @@ function renderScan() {
 
 function renderSummary() {
   chrome.storage.local.get("scan", (res) => {
+    let fixes = [];
     // Display warnings
     const summaryWarningsDiv = document.getElementById("summary-nonnecessary");
     summaryWarningsDiv.innerHTML = "";
     if (res.scan.nonnecessary.length > 0) {
+      fixes.push(FIXES["nonessential"]);
       for (let i in res.scan.nonnecessary) {
         let elWarning = document.createElement("div");
         elWarning.innerHTML = `
-              <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
+              <div class="col box box-cookies box-warnings-summary" style="margin-bottom: 5px">
                 <p class="title-line tip-line"><b>${res.scan.nonnecessary[i].name}</b></p>
                 <p class="tip-line"><i class="fa-solid fa-link"></i> ${res.scan.nonnecessary[i].domain}</p>
                 <p class="tip-line"><i class="fa-solid fa-tag"></i> ${classIndexToString(res.scan.nonnecessary[i].current_label)}</p>
@@ -523,6 +575,7 @@ function renderSummary() {
       }
     } else {
       summaryWarningsDiv.innerHTML = "<p class='summary-p'>No cookie violations detected</p>";
+      document.getElementById("nonnecessaryBox").hidden = true;
     }
     // Display cmp info
     if (res.scan.cmp) {
@@ -536,6 +589,7 @@ function renderSummary() {
     // Display advanced
     if (res.scan.advanced) {
       document.getElementById("summary-type").innerHTML = "Advanced";
+      document.getElementById("siteInfoBox").hidden = true;
     } else {
       document.getElementById("summary-type").innerHTML = "Standard";
     }
@@ -550,6 +604,7 @@ function renderSummary() {
     const summaryUndeclaredDiv = document.getElementById("summary-undeclared");
     summaryUndeclaredDiv.innerHTML = "";
     if (res.scan.undeclared.length > 0) {
+      fixes.push(FIXES["undeclared"]);
       for (let i in res.scan.undeclared) {
         let elUndeclared = document.createElement("div");
         elUndeclared.innerHTML = `
@@ -562,12 +617,14 @@ function renderSummary() {
       }
     } else {
       summaryUndeclaredDiv.innerHTML = "<p class='summary-p'>No undeclared cookies detected</p>";
+      document.getElementById("undeclaredBox").hidden = true;
     }
 
     // Display wrongcat
     const summaryWrongcatDiv = document.getElementById("summary-wrongcat");
     summaryWrongcatDiv.innerHTML = "";
     if (res.scan.wrongcat.length > 0) {
+      fixes.push(FIXES["wrongcat"]);
       for (let i in res.scan.wrongcat) {
         let elWrongcat = document.createElement("div");
         elWrongcat.innerHTML = `
@@ -580,6 +637,57 @@ function renderSummary() {
       }
     } else {
       summaryWrongcatDiv.innerHTML = "<p class='summary-p'>No wrongly categorized cookies detected</p>";
+      document.getElementById("wrongcatBox").hidden = true;
+    }
+
+    // Display wrongexpiration
+    const summaryWrongexpiryDiv = document.getElementById("summary-wrongexpiry");
+    summaryWrongexpiryDiv.innerHTML = "";
+    let expiryFix = false;
+    let sessionFix = false;
+    if (res.scan.wrongexpiry.length > 0) {
+      for (let i in res.scan.wrongexpiry) {
+        let elWrongexpiry = document.createElement("div");
+        let expiryText = '';
+        if (res.scan.wrongexpiry[i].consent_expiry === "session") {
+          expiryText = 'Declared as session cookie but set as persistent';
+          if (!sessionFix) {
+            fixes.push(FIXES["wrongexpiry-session"]);
+            sessionFix = true;
+          }
+        } else if (res.scan.wrongexpiry[i].consent_expiry === "nosession") {
+          expiryText = 'Declared as persistent cookie but set as session';
+        } else {
+          expiryText = 'Expiry is much larger than declared';
+          if (!expiryFix) {
+            fixes.push(FIXES["wrongexpiry-time"]);
+            expiryFix = true;
+          }
+        }
+        elWrongexpiry.innerHTML = `
+          <div class="box box-cookies box-warnings-summary" style="margin-bottom: 5px">
+            <p class="title-line tip-line"><b>${res.scan.wrongexpiry[i].cookie.name}</b></p>
+            <p class="tip-line"><i class="fa-solid fa-clock"></i> ${expiryText}</p>
+          </div>`;
+        summaryWrongexpiryDiv.appendChild(elWrongexpiry);
+      }
+    } else {
+      summaryWrongexpiryDiv.innerHTML = "<p class='summary-p'>No cookies with wrong expiration times detected</p>";
+      document.getElementById("wrongexpiryBox").hidden = true;
+    }
+
+    // Display fixes
+    const summaryFixes = document.getElementById("summary-fixes");
+    if (fixes.length > 0) {
+      summaryFixes.innerHTML = "";
+      for (let fix of fixes) {
+        let elFix = document.createElement("li");
+        elFix.innerText = fix;
+        summaryFixes.appendChild(elFix);
+      }
+    } else {
+      summaryFixes.innerText = "No fix necessary!";
+      document.getElementById("fixesBox").hidden = true;
     }
   });
 }
@@ -599,7 +707,7 @@ chrome.storage.local.get("scan", (res) => {
         console.error("error analyzing cookies")
       }
       // renderScan();
-    }, 2000);
+    }, 3000);
   } else if (res.scan && res.scan.stage && res.scan.stage === SCANSTAGE[3]) {
       setContent(SCANSTAGE[3]);
       renderSummary();

@@ -69,11 +69,19 @@ const getForestScore = function(forest, features) {
 * @param {Object} features   Cookie features formatted as {"index": value}.
 * @return {Promise<Number>}  The predicted label for the cookie.
 */
-export const predictClass = async function (features, nfactor){
+export const predictClass = async function (features, nfactor) {
 
-    let existsUndefined = forests.reduce((total, f) => {return total || (f === undefined)}, false)
+    let existsUndefined = forests.reduce((total, f) => {return total || (f === undefined)}, false);
     if (existsUndefined) {
-        throw new Error("At least one internal forest model was undefined!");
+        await getExtensionFile(chrome.runtime.getURL("ext_data/model/forest_class0.json"), "json", (f) => forests[0] = f);
+        await getExtensionFile(chrome.runtime.getURL("ext_data/model/forest_class1.json"), "json", (f) => forests[1] = f);
+        await getExtensionFile(chrome.runtime.getURL("ext_data/model/forest_class2.json"), "json", (f) => forests[2] = f);
+        await getExtensionFile(chrome.runtime.getURL("ext_data/model/forest_class3.json"), "json", (f) => forests[3] = f);
+
+        let stillUndefined = forests.reduce((total, f) => {return total || (f === undefined)}, false);
+        if (stillUndefined) {
+            throw new Error("At least one internal forest model was undefined!");
+        }
     }
 
     let minIndex = -1
