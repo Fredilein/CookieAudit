@@ -6,6 +6,10 @@ body {
     min-width: 400px;
 }
 
+a {
+  cursor: pointer;
+}
+
 #content {
   background-color: white;
 }
@@ -75,6 +79,15 @@ body {
   margin-bottom: 5px;
 }
 
+.link-store {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+  width: 100%;
+  display: inline-block;
+  text-decoration: none;
+}
+
 .btn-advanced {
   margin-top: 0px;
   margin-bottom: 10px;
@@ -92,6 +105,10 @@ body {
   background: #F2F5F7;
   box-shadow: 1px 2px 8px 0 rgba(0,0,0,0.10);
   border-radius: 8px;
+}
+
+.task-box {
+  background: white;
 }
 
 .box-cookies {
@@ -188,4 +205,25 @@ li {
 .summary-p {
   margin-left: 20px;
   margin-right: 20px;
+}
+
+.task-p {
+  margin-bottom: 0px;
+}
+
+.stored-p {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+  width: 100%;
+  display: inline-block;
+  color: #269c6e;
+}
+
+.learn {
+  text-decoration: none;
+}
+
+.box-cmp-warnings {
+  margin-top: 0px;
 }
