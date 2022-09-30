@@ -1,3 +1,8 @@
+/**
+ * Currently a database is hosted on mongoDB atlas to collect reports.
+ * We might host our own DB in the future.
+ * This file stores the connection strings.
+ */
 export const db = {
   "dataSource": "CookieAudit",
   "database": "CookieAuditDB",

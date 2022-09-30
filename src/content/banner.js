@@ -1,11 +1,23 @@
+/**
+ * banner.js
+ * ---------
+ * Analyzes the cookie banner. To detect such a banner on our website we use easylist.
+ * - Checks if a reject button is present on the initial banner
+ * - Checks if non-essential cookie categories are preselected
+ */
+
 const generalUrl =
   "https://raw.githubusercontent.com/easylist/easylist/master/easylist_cookie/easylist_cookie_general_hide.txt";
 
+/**
+ * Keywords for buttons and categories.
+ * MV3 doesn't allow us to import from other files here, that's why it is defined in this file even though it adds some clutter.
+ */
 const BUTTONS_ACCEPT = ["akzeptieren", "zulassen", "accept", "allow", "allow all"];
 const BUTTONS_REJECT = ["ablehnen", "deny", "necessary", "essential"];
 const BUTTONS_SETTINGS = ["zwecke anzeigen", "preferänzen", "einstellungen", "settings", "preferences", "personalise", "verwalten", "anpassen", "zwecke"];
 
-NONESSENTIAL_KEYWORDS = ["leistung", "funktionell", "marketing", "functional", "analytical", "advertising"];
+NONESSENTIAL_KEYWORDS = ["leistung", "funktionell", "marketing", "functional", "analytical", "advertising", "social"];
 
 if (typeof SCANSTAGE === 'undefined') {
   const SCANSTAGE = ["initial", "necessary", "all", "finished"];
@@ -31,7 +43,6 @@ const handleEasylist = function (data) {
     }
   }
   return easylist;
-  // getCMP();
 };
 
 /*
@@ -42,33 +53,17 @@ const getCMP = function (easylist) {
   for (l in easylist) {
     const selector = document.querySelector(easylist[l]);
     if (selector) {
-      console.log("[banner.js] Found following selector: ", selector);
       selectors.push(selector);
-      // analyzeCMP(selector);
     }
   }
   return selectors;
 };
 
-/*
- * Analyze potential cookie popup and open finergrained preferences if available
+/**
+ * Searches buttons on a potential popup banner
+ * @param selector HTML selector which potentially is a banner
+ * @returns {{settings: <button>, reject: <button>, accept: <button>}}
  */
-const analyzeCMP = function (selector) {
-  const buttons = selector.querySelectorAll("Button");
-  console.log("[#] Found following buttons:");
-  buttons.forEach((btn) => {
-    console.log(btn.innerHTML);
-    // TODO: Craft a list here:
-    if (btn.innerHTML.toLowerCase().includes("preferences") || btn.innerHTML.toLowerCase().includes("settings") || btn.innerHTML.toLowerCase().includes("einstellungen") || btn.innerHTML.toLowerCase().includes("personalise") || btn.innerHTML.toLowerCase().includes("verwalten") || btn.innerHTML.toLowerCase().includes("anpassen") || btn.innerHTML.toLowerCase().includes("zwecke")) {
-      btn.click();
-      console.log("[#] Clicked button ", btn.innerHTML);
-      console.log("[#] Greater z index:");
-      const greaterZ = greaterZIndex(selector);
-      setTimeout(() => findCookieClasses(greaterZ[greaterZ.length - 1]), 1000);
-    }
-  });
-};
-
 const searchButtons = function (selector) {
   const buttons = selector.querySelectorAll("Button");
   const relevantButtons = {
@@ -91,7 +86,6 @@ const searchButtons = function (selector) {
 
 /*
  * Search for checkboxes in popup and see if a sibling has a label
- * TODO: Check if a label is in further relatives of the checkbox
  */
 const findCookieClasses = function (popup) {
   const checkboxes = popup.querySelectorAll("input[type=checkbox]");
@@ -109,6 +103,11 @@ const findCookieClasses = function (popup) {
   }
 };
 
+/**
+ * Searches all checkboxes and tries to find its corresponding label
+ * @param popup potential popup banner
+ * @returns {boolean} true if any non-essential category is preselected, false otherwise
+ */
 const nonessentialPreselected = function (popup) {
   const checkboxes = popup.querySelectorAll("input[type=checkbox]");
   for (const c of checkboxes) {
@@ -127,6 +126,12 @@ const nonessentialPreselected = function (popup) {
   return false;
 }
 
+/**
+ * Find nearest label to checkbox. Recursively search up <iter> steps to the parent element
+ * @param element checkbox
+ * @param iter how far above in the html tree we want to search
+ * @returns {string|undefined} the first text string that is found
+ */
 const findTextInElement = function (element, iter) {
   if (iter == 0) return;
   const text = Array.from(element.parentElement.children).find(el => el.textContent);
@@ -144,9 +149,7 @@ const getZIndex = function (e) {
 };
 
 /*
- * Finds all large z indices
- * TODO: argument selector not used because:
- * TODO: Currently a popup never returns a larger z-index even though chromedevtool says otherwise...
+ * Finds all large z indices to find the banner which lies on top of the page
  */
 const greaterZIndex = function () {
   var elements = Array.from(document.querySelectorAll("body *"));
@@ -172,15 +175,12 @@ const greaterZIndex = function () {
     }
   }
   return results;
-  // return Array.from(document.querySelectorAll('body *'))
-  //       .map(a => window.getComputedStyle(a).getPropertyValue('z-index'))
-  //       .filter(a => !isNaN(a))
-  //       .sort()
-  //       .pop();
 };
 
-// fetchEasylist();
-
+/**
+ * Store a warning in the scan object
+ * @param warning
+ */
 const setWarning = function (warning) {
   chrome.storage.local.get("scan", (res) => {
     if (res && res.scan && (res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2])) {
@@ -192,7 +192,11 @@ const setWarning = function (warning) {
   });
 }
 
+/**
+ * Entry point for the banner script
+ */
 const handler = setTimeout(async () => {
+  // We store the easylist in storage.local to avoid downloading it on every page load
   chrome.storage.local.get("easylist", async (res) => {
     let easylist;
     if (!res || !res.easylist) {

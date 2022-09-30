@@ -1,3 +1,10 @@
+/**
+ * cmp.js
+ * ------
+ * We try to detect the CMP here by looking at the cookies. We also parse the contents of cookies which hold information
+ * about the selected choices by the user.
+ */
+
 export const analyzeCMP = function (cookie) {
   var choices;
   switch (cookie.name) {
@@ -13,15 +20,16 @@ export const analyzeCMP = function (cookie) {
         'name': 'Cookiebot',
         'choices': choices
       };
-    case "eupubconsent-v2":
-      // console.log(cookie.name, " - ", cookie.domain);
-      // console.log(cookie.value);
-      return null;
     default:
       return null;
   }
 }
 
+/**
+ * Parse the choices from the onetrust cookie value.
+ * @param value
+ * @returns {null|[]} Array with all allowed categories
+ */
 const getOnetrustChoices = function (value) {
   if (!value || !value.includes("group")) {
     return null;
@@ -62,6 +70,11 @@ const getOnetrustChoices = function (value) {
   return choices;
 }
 
+/**
+ * Parse the choices from the cookiebot cookie value.
+ * @param value
+ * @returns {null|[]} Array with all allowed categories
+ */
 const getCookiebotChoices = function (value) {
   if (!value) {
     return null;

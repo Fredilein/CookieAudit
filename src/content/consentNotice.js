@@ -1,12 +1,40 @@
-// Run search functions for different CMPs from here
-// Just waiting for the page to be loaded sometimes isn't enough for fully getting the DOM
-// therefore we wait an additional second.
-// Just waiting for the document to load isn't enough somehow, that's why we wait for an additional second
+/**
+ * consentNotice.js
+ * ----------------
+ * In this file we parse the consent notice for different CMPs. Currently Cookiebot and OneTrust are implemented.
+ * A populated cookieNotice object should look as follows:
+    { "Necessary": [],
+      "Functionality": [],
+      "Analytical": [],
+      "Advertising": [],
+      "Uncategorized": [] }
+ * Each array should be populated with the declared cookies for the corresponding category.
+ * Currently we parse the following from each declared cookie:
+   { "name": <string>,
+     "host": <string>,
+     "description": <string>,
+     "expiry": <number (in seconds)>,
+     "session": <boolean> }
+ */
 
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
+const CATEGORIES = ["Necessary", "Functionality", "Analytical", "Advertising", "Uncategorized"];
 
+const KEYWORD_MAPPING = {
+  "Necessary": ["mandatory", "essential", "necessary", "required"],
+  "Functionality": ["functional", "security", "video", "preference", "secure", "social"],
+  "Analytical": ["measurement", "analytic", "anonym", "research", "performance"],
+  "Advertising": ["ad selection", "advertising", "advertise", "targeting", "sale of personal data", "marketing", "tracking", "tracker", "fingerprint"],
+  "Uncategorized": ["uncategorized", "unknown"]
+};
+
+/**
+ * Here are the entry points to search for a CMP.
+ * If the code for detecting a new CMP is added, also make sure to call this code in this function and store cookieNotice
+ * object in the scan object.
+ */
 const _ = setTimeout(async () => {
-  let found = false;
+  // Just waiting for the document to load isn't enough sometimes, that's why we wait for an additional second
   chrome.storage.local.get("scan", async (res) => {
     if (res && res.scan && (res.scan.consentNotice || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3])) {
       return;
@@ -16,27 +44,20 @@ const _ = setTimeout(async () => {
     if (consentNotice) {
       console.log("Cookiebot notice:\n", consentNotice);
       res.scan.consentNotice = consentNotice;
-      chrome.storage.local.set({"scan": res.scan });
+      chrome.storage.local.set({"scan": res.scan});
     }
     consentNotice = await searchOnetrust();
     if (consentNotice) {
       console.log("Onetrust notice:\n", consentNotice);
       res.scan.consentNotice = consentNotice;
-      chrome.storage.local.set({"scan": res.scan });
+      chrome.storage.local.set({"scan": res.scan});
     }
   });
 }, 1000);
 
-const CATEGORIES = ["Necessary", "Functionality", "Analytical", "Advertising", "Uncategorized"];
-const KEYWORD_MAPPING = {
-  "Necessary": ["mandatory", "essential", "necessary", "required"],
-  "Functionality": ["functional", "security", "video", "preference", "secure", "social"],
-  "Analytical": ["measurement", "analytic", "anonym", "research", "performance"],
-  "Advertising": ["ad selection", "advertising", "advertise", "targeting", "sale of personal data", "marketing", "tracking", "tracker", "fingerprint"],
-  "Uncategorized": ["uncategorized", "unknown"]
-};
-
-// We can't move this function to a different file because no imports are allowed outside a module
+// =====================
+// ===== Cookiebot =====
+// =====================
 async function searchCookiebot() {
   // TODO: Maybe not everywhere the script tag has the id CookieBlock -> Search for cbid in whole DOM
   const el = document.getElementById("Cookiebot");
@@ -44,9 +65,8 @@ async function searchCookiebot() {
     return null;
   }
 
-  const pattern1 = new RegExp("[&?]cbid=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-
-  const cbidMatches = el.src.match(pattern1);
+  const cbidPattern = new RegExp("[&?]cbid=([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
+  const cbidMatches = el.src.match(cbidPattern);
   if (!cbidMatches) {
     return null;
   }
@@ -55,8 +75,6 @@ async function searchCookiebot() {
   if (!cbid) {
     return null;
   }
-
-  console.log("Found Cookiebot cbid: ", cbid);
 
   // TODO: Dino doesn't necessarily take the current URL as a referrer.
   console.log(`https://consent.cookiebot.com/${cbid}/cc.js?referer=${document.URL}`);
@@ -150,7 +168,7 @@ function parseExpiryCookiebot(expiry_str) {
     console.error(`Odd length expiry string: "${expiry_str}"`);
     return;
   }
-  for (let i = 0; i < expiry.length / 2; i+= 2) {
+  for (let i = 0; i < expiry.length / 2; i += 2) {
     count = Number(expiry[i]);
     interval = expiry[i + 1];
     if (interval.match(second_pattern)) {
@@ -175,6 +193,9 @@ function parseExpiryCookiebot(expiry_str) {
   return totalcount;
 }
 
+// ====================
+// ===== OneTrust =====
+// ====================
 async function searchOnetrust() {
   const el = document.querySelector('script[data-domain-script]');
   if (!el) {

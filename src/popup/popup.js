@@ -1,7 +1,24 @@
+/**
+ * popup.js
+ * --------
+ * Everything relating to the extension popup frontend is handled here. Most of the code is for rendering the current scan.
+ * Unfortunately Chrome MV3 doesn't allow us to split this code into multiple files.
+ */
+
 let contentDiv = document.getElementById("content");
 
+/**
+ * A scan is always in one of these 4 stages.
+ * - "initial": not yet started (scan can also be undefined in this stage),
+ * - "necessary": started and just checking if non-essential cookies are being set by the website,
+ * - "all": checking all cookie violations, a consent notice has been found if the scan is in this stage,
+ * - "finished": the summary is being displayed
+ */
 const SCANSTAGE = ["initial", "necessary", "all", "finished"];
 
+/**
+ * These fixes are displayed on the summary according to what needs to be fixed.
+ */
 const FIXES = {
   "nonessential": `You must receive users' consent before you use any cookies except strictly necessary cookies. <a href="https://www.cookieaudit.app#consent" class="learn" target="_blank">Learn more</a>`,
   "undeclared": `You must declare and provide information about each cookie before consent is received. <a href="https://www.cookieaudit.app#declaration" class="learn" target="_blank">Learn more</a>`,
@@ -12,15 +29,9 @@ const FIXES = {
   "preselected": `Make sure non-essential categories are not preselected in the consent popup. <a href="https://www.cookieaudit.app#preselected" class="learn" target="_blank">Learn more</a>`,
 }
 
-function deleteCookies() {
-  chrome.runtime.sendMessage("clear_cookies", function (res) {
-    console.log(res);
-  });
-}
-
 /**
  * Retrieve Url of the active tab.
- * @returns {Promise<string>} Url.
+ * @returns {String} Url.
  */
 async function getURL() {
   let queryOptions = {active: true, lastFocusedWindow: true};
@@ -33,8 +44,8 @@ async function getURL() {
 }
 
 /**
- * Handles setup of a scan as well as everything after the scan.
- * @returns {Promise<void>}
+ * The next functions are handlers for when the user clicks one of the buttons on the popup.
+ * This function is called when a user clicks the start button. It creates a new empty scan object and stores it in the chrome storage.
  */
 async function startScan() {
   const url = await getURL();
@@ -42,12 +53,7 @@ async function startScan() {
     console.log('Open a website before starting a scan');
     return;
   }
-  // chrome.storage.local.get("scan", (res) => {
-  //   if (!res) {
-  //     console.error(`Connection to local storage failed: ${res}`);
-  //   }
 
-  // if (!res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
   console.log("Starting scan...");
   try {
     chrome.runtime.sendMessage("clear_cookies", function (res) {
@@ -80,14 +86,13 @@ async function startScan() {
 
   setContent(SCANSTAGE[1]);
 
-  // TODO: Not sure if good UX but fixes the update problem for now
   window.close();
-  // } else {
-  //   console.error("Can't start scan.");
-  // }
-  // });
 }
 
+/**
+ * This function is called when the user clicks on the stop button. Sets the appropriate fields in the scan object
+ * and calls setContent to display the summary.
+ */
 function stopScan() {
   chrome.storage.local.get("scan", (res) => {
     if (!res || !res.scan || !res.scan.stage || res.scan.stage === SCANSTAGE[0] || res.scan.stage === SCANSTAGE[3]) {
@@ -107,6 +112,9 @@ function stopScan() {
   });
 }
 
+/**
+ * Called when user clicks the advanced scan button. Changes the scan object and calls clear_cookies in the background script.
+ */
 function advancedScan() {
   chrome.storage.local.get("scan", (res) => {
     if (!res || !res.scan || !res.scan.stage || res.scan.stage !== SCANSTAGE[1]) {
@@ -130,6 +138,9 @@ function advancedScan() {
   });
 }
 
+/**
+ * Called when user clicks the discard button on the summary.
+ */
 function discardScan() {
   chrome.storage.local.get("scan", (res) => {
     if (!res || !res.scan || !res.scan.stage || !res.scan.stage === SCANSTAGE[3]) {
@@ -143,11 +154,12 @@ function discardScan() {
 }
 
 /**
- * Sets the basic html strcture of the extension during a scan.
- * The content of these divs is changed upon receiving information while scanning.
+ * Set the basic html structure of the extension during a scan, depending on the current scan stage.
+ * There are lots of empty divs which are populated in the renderScan and renderSummary functions.
  */
 function setContent(stage) {
   switch (stage) {
+    // "initial" or scan undefined
     case SCANSTAGE[0]:
       contentDiv.innerHTML = `
         <div class="section-start">
@@ -173,6 +185,7 @@ function setContent(stage) {
         startScan();
       });
       break;
+    // standard scan
     case SCANSTAGE[1]:
       contentDiv.innerHTML = `
         <div class="box task-box">
@@ -225,6 +238,7 @@ function setContent(stage) {
         stopScan();
       });
       break;
+    // advanced scan
     case SCANSTAGE[2]:
       contentDiv.innerHTML = `
         <div class="box task-box">
@@ -316,6 +330,7 @@ function setContent(stage) {
         stopScan();
       });
       break;
+    // summary
     case SCANSTAGE[3]:
       if (!contentDiv) {
         break;
@@ -394,6 +409,8 @@ function setContent(stage) {
         </div>
         `;
 
+      // If we export a summary (opening it in a new window) the summary will be re-rendered. We don't want to include the buttons
+      // at the end of the summary. To check if this function is called from the new popup window, we included a empty div with ID summary-popup in this HTML.
       if (document.getElementById("summary-popup")) {
         break;
       }
@@ -435,8 +452,7 @@ function setContent(stage) {
 
 /**
  * Translate a label from the classifier into the corresponding purpose string.
- * @param idx         Label
- * @returns {string}  Cookie purpose string
+ * This function is also declared in the globals.js but because we're not allowed to import files in popup.js we need to also put it here.
  */
 const classIndexToString = (idx) => {
   switch (idx) {
@@ -480,6 +496,7 @@ function renderScan() {
         </div>`;
       warningDiv.appendChild(elWarning);
     }
+
     // render cmp info
     if (res.scan.cmp) {
       document.getElementById("cmpdiv").innerHTML = res.scan.cmp.name;
@@ -491,6 +508,7 @@ function renderScan() {
         }
       }
     }
+
     // render url
     if (res.scan.url) {
       document.getElementById("scanurl").innerHTML = res.scan.url;
@@ -498,6 +516,7 @@ function renderScan() {
       document.getElementById("scanurl").innerHTML = "unknown";
     }
 
+    // render consent notice
     if (res.scan.consentNotice) {
       document.getElementById("noticediv").innerHTML = "Found";
       if (res.scan.stage === SCANSTAGE[1]) {
@@ -507,6 +526,7 @@ function renderScan() {
       document.getElementById("noticediv").innerHTML = "Not found";
     }
 
+    // render total cookies
     if (res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2]) {
       chrome.runtime.sendMessage("total_cookies", function (res) {
         document.getElementById("totaldiv").innerHTML = res;
@@ -578,6 +598,10 @@ function renderScan() {
   });
 }
 
+/**
+ * Render all information in the summary. For cleaner code we could merge this with the renderScan function because
+ * there are lots of overlaps.
+ */
 function renderSummary() {
   chrome.storage.local.get("scan", (res) => {
     let fixes = [];
@@ -743,12 +767,15 @@ function renderSummary() {
   });
 }
 
-// Setup extension DOM
+/**
+ * Entry point of popup.js This is called whenever the extension popup is opened.
+ */
 var intervalID;
 chrome.storage.local.get("scan", (res) => {
   if (res.scan && (res.scan.stage && res.scan.stage === SCANSTAGE[1] || res.scan.stage === SCANSTAGE[2])) {
     setContent(res.scan.stage);
     renderScan();
+    // We update the contents of the popup window every 3 seconds
     intervalID = window.setInterval(() => {
       try {
         chrome.runtime.sendMessage("analyze_cookies", function (res) {
