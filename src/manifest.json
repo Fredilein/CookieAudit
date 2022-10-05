@@ -1,7 +1,7 @@
 {
   "name": "CookieAudit",
   "description": "Check if a website respects your cookie preferences.",
-  "version": "0.1",
+  "version": "0.2",
   "manifest_version": 3,
    "icons": {
     "16": "./logo/icon16.png",
