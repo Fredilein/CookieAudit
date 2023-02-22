@@ -177,7 +177,6 @@ function setContent(stage) {
             </ul>   
         </div>
         <div class="section-disclaimer">
-            This extension is still under developement. It contains bugs!
         </div>
       `;
       document.getElementById("content").style.backgroundColor = '#f2f5f7';

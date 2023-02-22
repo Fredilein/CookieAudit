@@ -15,7 +15,7 @@ const generalUrl =
  */
 const BUTTONS_ACCEPT = ["akzeptieren", "zulassen", "accept", "allow", "allow all"];
 const BUTTONS_REJECT = ["ablehnen", "deny", "necessary", "essential"];
-const BUTTONS_SETTINGS = ["zwecke anzeigen", "preferänzen", "einstellungen", "settings", "preferences", "personalise", "verwalten", "anpassen", "zwecke"];
+const BUTTONS_SETTINGS = ["zwecke anzeigen", "preferänzen", "ich möchte meine präferenz festlegen", "einstellungen", "settings", "preferences", "personalise", "verwalten", "anpassen", "zwecke"];
 
 NONESSENTIAL_KEYWORDS = ["leistung", "funktionell", "marketing", "functional", "analytical", "advertising", "social"];
 
