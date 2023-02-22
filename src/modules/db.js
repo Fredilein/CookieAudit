@@ -4,9 +4,9 @@
  * This file stores the connection strings.
  */
 export const db = {
-  "dataSource": "CookieAudit",
+  "dataSource": "Cluster0",
   "database": "CookieAuditDB",
   "collection": "reports",
-  "apiKey": "DZ5RfEIOrXKBBggNNexne5F1yyjVPIFseQWn7m2BmLBaineJ7O0ArSIjcNQG0OFV",
-  "url": "https://data.mongodb-api.com/app/data-ygvaf/endpoint/data/v1/action/insertOne"
+  "apiKey": "826DZVMkrY4dPvTezF92KQqmkZGDSJvaN4nyLUNzMcXltlgQVftWBV7HzwtNDJxT",
+  "url": "https://data.mongodb-api.com/app/data-umkxg/endpoint/data/v1/action/findOne"
 }
